@@ -22,7 +22,7 @@ library(lattice)
 ##################################
 ##################################
 
-Clinical <- read.table(file="TableS5", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+Clinical <- read.table(file="TableS5.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
 Clinical$NaturalDeath <- 1 * (Clinical$Last.Followup.Status %in% c("d", "d-o.c."))
 
 ## We remove Samples with no follow-up time

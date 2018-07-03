@@ -5,7 +5,7 @@ fitted <- msfit(fm, newdata=newdata, trans=tra)
 
 ## Predictions ER-
 
-timepoints <- seq(from=0, to=20, by=0.25),
+timepoints <- seq(from=0, to=20, by=0.25)
 pt <- list()
 pt[['DR']] <- getProbsDR(fm, group=1, newdata, timepoints=timepoints)
 beta <- coef(m)['TLastSurgery.LR.NEG']
