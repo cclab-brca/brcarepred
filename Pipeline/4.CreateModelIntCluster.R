@@ -1,3 +1,4 @@
+rm(list=ls())
 library(RColorBrewer)
 cols <- c("black", "lightblue", "darkblue", "red", "olivedrab")
 cols <- rep(cols, 2)
@@ -25,7 +26,7 @@ if (length(ids)>0) Clinical <- Clinical[-ids,]
 ## We remove Samples with no follow-up time or death known
 
 ## We remove samples with stage 4
-Clinical <- Clinical[which(Clinical$Stage!=4),]
+Clinical <- Clinical[-which(Clinical$Stage==4),]
 
 ## We remove benign, DCIS or PHYL
 bad.hist <- which(Clinical$Histological.Type %in% c("BENIGN", "PHYL"))

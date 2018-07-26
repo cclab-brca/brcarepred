@@ -31,7 +31,7 @@ ids <- which(Clinical$T==0)
 if (length(ids)>0) Clinical <- Clinical[-ids,]
 
 ## We remove samples with stage 4
-Clinical <- Clinical[which(Clinical$Stage!=4),]
+Clinical <- Clinical[-which(Clinical$Stage==4),]
 
 
 ## We remove Samples with no follow-up time or death known

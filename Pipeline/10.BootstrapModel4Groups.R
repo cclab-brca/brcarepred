@@ -1,7 +1,7 @@
+rm(list=ls())
 ## Change group for the other clinical groups
 
 id <- as.numeric(Sys.getenv("LSB_JOBINDEX"))
-if (!file.exists(paste("/lustre/projects/cclab-metams/Oscar/MetastasisPaper/BootsPreds4GROUPSMODEL_", id, "_GROUP1.RData", sep=""))) {
 load(file="FourGroupsM.RData")
 Oldnewdata <- newdata
 source("mssampleOscar.R")
@@ -184,4 +184,4 @@ pt.boot[['LR']] <- getProbsLR(mb, group=1, Oldnewdata, timepoints=timepoints, co
 timepoints <- c(seq(from=0, to=15, by=0.25), 16:20)
 system.time(pt.boot[['S']] <- getProbsS(mb, group=1, Oldnewdata, timepoints=timepoints, compact=FALSE))
 
-save(mb, pt.boot, file=paste("/lustre/projects/cclab-metams/Oscar/MetastasisPaper/BootsPreds4GROUPSMODEL_", id, "_GROUP1.RData", sep=""))
+save(mb, pt.boot, file=paste("./Bootstraps/BootsPreds4GROUPSMODEL_", id, "_GROUP1.RData", sep=""))

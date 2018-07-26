@@ -1,3 +1,4 @@
+rm(list=ls())
 ## Change group for the other Pam50 groups
 
 load(file="Pam50M.RData")
@@ -178,4 +179,4 @@ timepoints <- c(seq(from=0, to=15, by=0.25), 16:20)
 system.time(pt.boot[['S']] <- getProbsS(mb, group=1, Oldnewdata, timepoints=timepoints, compact=FALSE))
 
 
-save(mb, pt.boot, file=paste("/lustre/projects/cclab-metams/Oscar/MetastasisPaper/BootsPredsPAM50MODEL_", id, "_GROUP1.RData", sep=""))
+save(mb, pt.boot, file=paste("./Bootstraps/BootsPredsPAM50MODEL_", id, "_GROUP1.RData", sep=""))

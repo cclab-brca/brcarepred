@@ -1,4 +1,4 @@
-
+rm(list=ls())
 library(RColorBrewer)
 cols <- c("black", "lightblue", "darkblue", "red", "olivedrab")
 cols <- rep(cols, 2)
@@ -33,7 +33,7 @@ if (length(ids)>0) Clinical <- Clinical[-ids,]
 ## We remove Samples with no follow-up time or death known
 
 ## We remove samples with stage 4
-Clinical <- Clinical[which(Clinical$Stage!=4),]
+Clinical <- Clinical[-which(Clinical$Stage==4),]
 
 Clinical <- Clinical[which(!is.na(Clinical$T)),]
 Clinical <- Clinical[which(!is.na(Clinical$Death)),]
@@ -60,7 +60,6 @@ Clinical$TLR[which(Clinical$TLR>Clinical$TDR)] <- Clinical$T[which(Clinical$TLR>
 Clinical$T <- Clinical$T/365.25
 Clinical$TLR <- Clinical$TLR/365.25
 Clinical$TDR <- Clinical$TDR/365.25
-Clinical$TR <- Clinical$TR/365.25
 
 Clinical$LN <- Clinical$Lymph.Nodes.Positive
 Clinical$LN[which(Clinical$LN>=10)] <- 10

@@ -1,3 +1,4 @@
+rm(list=ls())
 id <- as.numeric(Sys.getenv("LSB_JOBINDEX"))
 library(mstate)
 library(brcarepred)
