@@ -142,7 +142,8 @@ for (i in ID) {
     for (j in tts) {
             if (j==0) {
                 events <- as.character(tmp$SITE[which(tmp$TIME.RELAPSE==j)])
-                for (ev in events)  Met[,ev] <- 1
+                events <- na.omit(events)
+                if (length(events)>0) for (ev in events)  Met[,ev] <- 1
             } else {
                 feo <- data.frame(ID=i, time1=time1,
                               time2=j,
@@ -164,7 +165,8 @@ for (i in ID) {
             feo <- cbind(feo, Met)
             time1 <- j
             events <- as.character(tmp$SITE[which(tmp$TIME.RELAPSE==j)])
-            for (ev in events)  Met[,ev] <- 1
+                events <- na.omit(events)
+                if (length(events)>0) for (ev in events)  Met[,ev] <- 1
             feo$enum <- enum
             CR2 <- rbind(CR2, feo)
             enum <- enum + length(events)
