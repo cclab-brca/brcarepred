@@ -1,19 +1,20 @@
+rm(list=ls())
 cols.er <- c("red", "olivedrab")
 
 coliClust <- c('#FF5500', '#00EE76', '#CD3278','#00C5CD', '#B5D0D2', '#8B0000',
                '#FFFF40', '#0000CD', '#FFAA00', '#EE82EE', '#7D26CD')
 coliPam <- c("#E41A1C", "#FB9A99", "#1F78B4", "#A6CEE3", "#66A61E")
 coliGroup <- c("lightskyblue", "lightsalmon", "plum2", "wheat4")
-Rec <- read.table("TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
-Rec <- Rec[which(Rec$Stage!=4),]
+Rec <- read.table("../../TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
+Rec <- Rec[-which(Rec$Stage==4),]
 ## We remove benign, DCIS or PHYL
 bad.hist <- which(Rec$Histological.Type %in% c("BENIGN", "PHYL"))
 if (length(bad.hist)>0) Rec <- Rec[-bad.hist,]
 Rec$TDR[which(Rec$TDR==0)] <- 0.1
 Rec$TLR[which(Rec$TLR==0)] <- 0.1
 
-Clinical <- read.table(file="TableS7.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
-Clinical <- Clinical[,c('METABRIC.ID', 'ER.Expr', 'Her2.Expr')]
+Clinical <- read.table(file="../../TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+Clinical <- Clinical[,c('METABRIC.ID', 'ER.Expr', 'Her2.Expr', 'Pam50Subtype', 'iC10')]
 Rec <- merge(Rec, Clinical, all.x=T, sort=F)
 
 Rec$ER.Status <- factor(Rec$ER.Status,
@@ -30,11 +31,12 @@ Rec$Group <- factor(Rec$Group)
 
 
 Rec <- Rec[which(Rec$TYPE.RELAPSE=="DISTANT"),]
-Rec <- Rec[,c('METABRIC.ID', 'SITE', 'TIME.RELAPSE', 'iC10', 'ER.Status', 'Pam50Subtype', 'Group')]
+Rec <- Rec[,c('METABRIC.ID', 'SITE', 'TIME.RELAPSE', 'ER.Status', 'Group',
+              'Pam50Subtype', 'iC10')]
 Times <- sapply(split(Rec, Rec$METABRIC.ID),
        function(x) nrow(x))
 Times <- data.frame(METABRIC.ID=names(Times), N=Times)
-Times <- merge(Times, unique(Rec[,c(1, 4:7)]))
+Times <- merge(Times, unique(Rec[,c(1, 4, 5, 6, 7)]))
 tapply(Times$N, Times$ER.Status, mean)
 tapply(Times$N, Times$Group, mean)
 tapply(Times$N, Times$Pam50Subtype, mean)

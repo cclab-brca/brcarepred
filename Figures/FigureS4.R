@@ -1,3 +1,4 @@
+rm(list=ls())
 library(survival)
 pdf("FigureS4.pdf", width=8, height=8)
 
@@ -6,7 +7,7 @@ coliClust <- c('#FF5500', '#00EE76', '#CD3278','#00C5CD', '#B5D0D2', '#8B0000',
 
 TP <- list()
 for (i in 1:11) {
-    load(paste0("./Models/TP/TP_IntClust_", i, ".RData"))
+    load(paste0("../Models/TP/TP_IntClust_", i, ".RData"))
     times <- pt$S$Times
     TP[[i]] <- I(pt$S$p.s.l.d +
                         pt$S$p.s.d + pt$S$p.s.l.c +

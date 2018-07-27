@@ -1,3 +1,4 @@
+rm(list=ls())
 library(RColorBrewer)
 
 cols.er <- c("olivedrab", "red")
@@ -6,7 +7,7 @@ coliPam <- c("#E41A1C", "#FB9A99", "#1F78B4", "#A6CEE3", "#66A61E")
 coliClust <- c('#FF5500', '#00EE76', '#CD3278','#00C5CD', '#B5D0D2', '#8B0000',
                 '#FFFF40', '#0000CD', '#FFAA00', '#EE82EE', '#7D26CD')
 
-Clinical <- read.table(file="TableS7.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+Clinical <- read.table(file="../../TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
 Clinical$NaturalDeath <- 1 * (Clinical$Last.Followup.Status %in% c("d", "d-o.c."))
 
 ## We remove Samples with no follow-up time
@@ -15,7 +16,7 @@ ids <- which(Clinical$T==0)
 if (length(ids)>0) Clinical <- Clinical[-ids,]
 
 ## We remove samples with stage 4
-Clinical <- Clinical[which(Clinical$Stage!=4),]
+Clinical <- Clinical[-which(Clinical$Stage==4),]
 
 
 ## We remove Samples with no follow-up time or death known
@@ -66,7 +67,7 @@ Clinical$ER.Status <- factor(Clinical$ER.Status,
 Clinical$NaturalDeath <- 1 * (Clinical$Last.Followup.Status %in% c("d", "d-o.c."))
 
 
-load(file="IntClust_AllProbs.RData")
+load(file="../Models/IntClust_AllProbs.RData")
 pld <- do.call("cbind", pld)
 pld <- pld[,-which(colnames(pld)=="Times")]
 plc <- do.call("cbind", plc)

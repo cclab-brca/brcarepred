@@ -1,6 +1,8 @@
-pdf("Figure5.pdf", width=6, height=12)
-X <- read.table("TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
-X <- X[which(X$Stage!=4),]
+rm(list=ls())
+## First panel
+pdf("Figure5a.pdf", width=6, height=12)
+X <- read.table("../../TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
+X <- X[-which(X$Stage==4),]
 
 ## We remove benign, DCIS or PHYL
 bad.hist <- which(X$Histological.Type %in% c("BENIGN", "PHYL"))
@@ -73,7 +75,11 @@ mtext("ER-", 2, at=pos.axis/2, cex=1.5)
 mtext("ER+", 2, at=pos.axis + (nrow(pat.list) - pos.axis)/2, cex=1.5)
 legend(12, 170, pch=19, col=color.sites$Color, legend=color.sites$Site, bty="n")
 
+dev.off()
 
+## Second panel
+
+pdf("Figure5b.pdf", width=6, height=12)
 
 library(multcomp)
 library(png)
@@ -102,8 +108,8 @@ maxpiesize <- unit(1, "inches")
 ####################################
 ####################################
 
-Rec <- read.table("TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
-Rec <- Rec[which(Rec$Stage!=4),]
+Rec <- read.table("../../TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
+Rec <- Rec[-which(Rec$Stage==4),]
 ## We remove benign, DCIS or PHYL
 bad.hist <- which(Rec$Histological.Type %in% c("BENIGN", "PHYL"))
 if (length(bad.hist)>0) Rec <- Rec[-bad.hist,]
@@ -115,6 +121,10 @@ Rec$TLR <- Rec$TLR/365.25
 Rec$TDR <- Rec$TDR/365.25
 Rec$TIME.RELAPSE <- Rec$TIME.RELAPSE/365.25
 Rec <- Rec[which(Rec$TYPE.RELAPSE=="DISTANT"),]
+
+Clinical <- read.table("../../TableS6.txt", header=TRUE, sep="\t", stringsAsFactors=F)
+Clinical <- Clinical[,c('METABRIC.ID', 'iC10')]
+Rec <- merge(Rec, Clinical, all.x=T)
 Rec <- Rec[,c('METABRIC.ID', 'SITE', 'TIME.RELAPSE', 'iC10', 'ER.Status')]
 Rec$SITE <- factor(Rec$SITE)
 levels(Rec$SITE) <- list(
@@ -305,8 +315,8 @@ library(lattice)
 
 
 library(survival)
-X <- read.table(file="FigureS7.txt", header=TRUE, sep="\t", stringsAsFactors=FALSE)
-X <- X[which(X$Stage!=4),]
+X <- read.table(file="../../TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=FALSE)
+X <- X[-which(X$Stage==4),]
 ## We remove benign, DCIS or PHYL
 bad.hist <- which(X$Histological.Type %in% c("BENIGN", "PHYL"))
 if (length(bad.hist)>0) X <- X[-bad.hist,]

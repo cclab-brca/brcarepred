@@ -1,3 +1,4 @@
+rm(list=ls())
 library(grid)
 library(multcomp)
 library(png)
@@ -24,8 +25,8 @@ maxpiesize <- unit(1, "inches")
 ####################################
 
 
-Rec <- read.table("TableS7", header=TRUE, sep="\t", stringsAsFactors=F)
-Rec <- Rec[which(Rec$Stage!=4),]
+Rec <- read.table("../../TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
+Rec <- Rec[-which(Rec$Stage==4),]
 ## We remove benign, DCIS or PHYL
 bad.hist <- which(Rec$Histological.Type %in% c("BENIGN", "PHYL"))
 if (length(bad.hist)>0) Rec <- Rec[-bad.hist,]
@@ -37,6 +38,9 @@ Rec$TLR <- Rec$TLR/365.25
 Rec$TDR <- Rec$TDR/365.25
 Rec$TIME.RELAPSE <- Rec$TIME.RELAPSE/365.25
 Rec <- Rec[which(Rec$TYPE.RELAPSE=="DISTANT"),]
+Clinical <- read.table(file="../../TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+Clinical <- Clinical[,c('METABRIC.ID', 'Pam50Subtype')]
+Rec <- merge(Rec, Clinical, all.x=T, sort=F)
 Rec <- Rec[,c('METABRIC.ID', 'SITE', 'TIME.RELAPSE', 'Pam50Subtype', 'ER.Status')]
 Rec$SITE <- factor(Rec$SITE)
 levels(Rec$SITE) <- list(
@@ -257,7 +261,7 @@ pushViewport(vps$inner, vps$figure,
 
 
 library(survival)
-X <- read.table(file="TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
+X <- read.table(file="../../TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
 X <- X[which(X$Stage!=4),]
 X$TDR[which(X$TDR==0)] <- 0.1
 X$TLR[which(X$TLR==0)] <- 0.1
@@ -284,7 +288,7 @@ levels(X$SITE) <- list("BRAIN/MENINGEAL"=c("BRAIN", "MENINGEAL"), "LNS"="LNS",
                            "OTHER", "OVARY", "PANCREAS",
                            "PERICARDIAL"))
 
-
+X <- merge(X, Clinical, all.x=T, sort=F)
 ## Now we only keep the first relapse of each site
 
 ID <- unique(X$METABRIC.ID)

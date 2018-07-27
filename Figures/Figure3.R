@@ -1,3 +1,4 @@
+rm(list=ls())
 pdf("Figure3.pdf", width=12, height=9)
 par(oma=c(2, 3, 2, 2), mar=c(3, 1, 4, 2), mfrow=c(4,6), xaxs="i", yaxs="i")
 
@@ -5,7 +6,7 @@ par(oma=c(2, 3, 2, 2), mar=c(3, 1, 4, 2), mfrow=c(4,6), xaxs="i", yaxs="i")
 library(survival)
 TP <- list()
 for (i in c("NEG", "POS") ) {
-    load(paste0("./Models/TP/ERTP_", i, ".RData"))
+    load(paste0("../Models/TP/ERTP_", i, ".RData"))
     times <- pt$S$Times
     TP[[i]] <- list(pt$S$p.s, pt$S$p.s.l, I(pt$S$p.s.l.d +
                         pt$S$p.s.d), I(pt$S$p.s.l.c +
@@ -22,7 +23,7 @@ for (i in c("NEG", "POS") ) {
 pt <-  TP
 rm(TP)
 
-load(file="/Users/rueda01/Documents/Projects/Metastasis/Metastasis/Paper/Draft/VersionJune16/NewScripts/TimeToLast/Paper/Scripts/Models/Bootstraps/BootstrapModel_ER_Results.RData")
+load(file="../Models/Bootstraps/BootstrapModel_ER_Results.RData")
 
 
 boot.TP <- list()
@@ -71,12 +72,10 @@ for (k in 1:5) {
             col=adjustcolor(cols[k], alpha=0.2), border=NA)
     }
 
-load(file="./Models/4GroupsTheorProbs_DifferentPreds.RData")
-labs <- names(pt)
 S <- c(2, 5, 10, 15, 20)
 TP <- list()
 for (i in 1:4) {
-    load(paste0("./Models/TP/ERTP_4GROUPS_", i, ".RData"))
+    load(paste0("../Models/TP/ERTP_4GROUPS_", i, ".RData"))
     times <- pt$S$Times
     TP[[i]] <- list(pt$S$p.s, pt$S$p.s.l, I(pt$S$p.s.l.d +
                         pt$S$p.s.d), I(pt$S$p.s.l.c +
@@ -93,7 +92,7 @@ for (i in 1:4) {
 pt <-  TP
 rm(TP)
 library(survival)
-load(file="/Users/rueda01/Documents/Projects/Metastasis/Metastasis/Paper/Draft/VersionJune16/NewScripts/TimeToLast/Paper/Scripts/Models/Bootstraps/BootstrapModel_4Groups_Results.RData")
+load(file="../Models/Bootstraps/BootstrapModel_4Groups_Results.RData")
 boot.TP <- list()
 for (i in 1:4) {
     boot.TP[[i]] <- list(FOURGROUPS.probs[[i]]$S$p.s, FOURGROUPS.probs[[i]]$S$p.s.l, I(FOURGROUPS.probs[[i]]$S$p.s.l.d +
@@ -112,8 +111,8 @@ for (i in 1:4) {
 BOOT.mean <- lapply(boot.TP, function(x) lapply(x, function(y) apply(y, 1, mean)))
 BOOT.sd <- lapply(boot.TP, function(x) lapply(x, function(y) apply(y, 1, sd)))
 
-names(pt) <- labs
-
+names(pt) <- c("ER-/HER2-", "ER-/HER2+", "ER+/HER2-", "ER+/HER2+")
+labs <- names(pt)
 cols <- c("black", "lightblue", "darkblue", "red", "olivedrab")
 cols <- rep(cols, 2)
 for (id in c(2,4,1,3)) {
@@ -130,12 +129,10 @@ for (k in 1:5) {
     }
 }
 
-load(file="./Models/Pam50TheorProbs_DifferentPreds.RData")
-labs <- names(pt)
 S <- c(2, 5, 10, 15, 20)
 TP <- list()
 for (i in 1:5) {
-    load(paste0("./Models/TP/TP_Pam50_", i, ".RData"))
+    load(paste0("../Models/TP/TP_Pam50_", i, ".RData"))
     times <- pt$S$Times
     TP[[i]] <- list(pt$S$p.s, pt$S$p.s.l, I(pt$S$p.s.l.d +
                         pt$S$p.s.d), I(pt$S$p.s.l.c +
@@ -153,7 +150,7 @@ pt <-  TP
 rm(TP)
 
 library(survival)
-load(file="/Users/rueda01/Documents/Projects/Metastasis/Metastasis/Paper/Draft/VersionJune16/NewScripts/TimeToLast/Paper/Scripts/Models/Bootstraps/BootstrapModel_Pam50_Results.RData")
+load(file="../Models/Bootstraps/BootstrapModel_Pam50_Results.RData")
 
 boot.TP <- list()
 for (i in 1:5) {
@@ -173,8 +170,8 @@ for (i in 1:5) {
 
 BOOT.mean <- lapply(boot.TP, function(x) lapply(x, function(y) apply(y, 1, mean)))
 BOOT.sd <- lapply(boot.TP, function(x) lapply(x, function(y) apply(y, 1, sd)))
-names(pt) <- labs
-
+names(pt) <- c("Basal", "Her2", "LumA", "LumB", "Normal")
+labs <- names(pt)
 
 cols <- c("black", "lightblue", "darkblue", "red", "olivedrab")
 cols <- rep(cols, 2)
@@ -195,12 +192,9 @@ for (k in 1:5) {
 }
 
 
-load(file="./Models/IntClustTheorProbs_DifferentPreds.RData")
-
-labs <- names(pt)
 TP <- list()
 for (i in 1:11) {
-    load(paste0("./Models/TP/TP_IntClust_", i, ".RData"))
+    load(paste0("../Models/TP/TP_IntClust_", i, ".RData"))
     times <- pt$S$Times
     TP[[i]] <- list(pt$S$p.s, pt$S$p.s.l, I(pt$S$p.s.l.d +
                         pt$S$p.s.d), I(pt$S$p.s.l.c +
@@ -217,7 +211,7 @@ for (i in 1:11) {
 pt <-  TP
 rm(TP)
 
-load(file="/Users/rueda01/Documents/Projects/Metastasis/Metastasis/Paper/Draft/VersionJune16/NewScripts/TimeToLast/Paper/Scripts/Models/Bootstraps/BootstrapModel_INTCLUST_Results.RData")
+load(file="../Models/Bootstraps/BootstrapModel_INTCLUST_Results.RData")
 
 boot.TP <- list()
 for (i in 1:11) {
@@ -238,8 +232,8 @@ for (i in 1:11) {
 
 BOOT.mean <- lapply(boot.TP, function(x) lapply(x, function(y) apply(y, 1, mean)))
 BOOT.sd <- lapply(boot.TP, function(x) lapply(x, function(y) apply(y, 1, sd)))
-names(pt) <- labs
-
+names(pt) <- c(1:3, "4ER+", "4ER-", 5:10)
+labs <- names(pt)
 
 cols <- c("black", "lightblue", "darkblue", "red", "olivedrab")
 cols <- rep(cols, 2)

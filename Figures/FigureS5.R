@@ -1,9 +1,11 @@
-# Top panel
-
+rm(list=ls())
 
 library(Hmisc)
-load(file="IntClust_AllProbs.RData")
+load(file="../Models/IntClust_AllProbs.RData")
 library(survival)
+
+lr <- mapply(function(x,y) x[,-1] + y[,-1], x=plc, y=pld)
+lr <- mapply(function(x,y) x + y[,-1], x=lr, y=pldc)
 
 dr <- mapply(function(x,y) x[,-1] + y[,-1], x=psd, y=psdc)
 dr <- mapply(function(x,y) x + y[,-1], x=dr, y=psdo)
@@ -16,12 +18,14 @@ dr <- mapply(function(x,y) x + y[,-1], x=dr, y=psc)
 
 times <-  ps[[1]][,1]
 
+lr.INTCLUST.mean <- sapply(lr, function(x) apply(x, 1, mean))
+lr.INTCLUST.SE <- sapply(lr, function(x) apply(x, 1, function(y) sd(y)/sqrt(length(y))))
 dr.INTCLUST.mean <- sapply(dr, function(x) apply(x, 1, mean))
 dr.INTCLUST.SE <- sapply(dr, function(x) apply(x, 1, function(y) sd(y)/sqrt(length(y))))
 
-
+all.lr <- do.call("cbind", lr)
 all.dr <- do.call("cbind", dr)
-Clinical <- read.table(file="TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+Clinical <- read.table(file="~/Documents/Projects/Metastasis/Metastasis/Paper/Draft/MetabricClinicalMolecularDataset.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
 Clinical$ER.Status <- factor(Clinical$ER.Status,
                              levels=c("neg", "pos"), labels=c("ER-", "ER+"))
 Clinical$ER.Status[which(is.na(Clinical$ER.Status) & Clinical$ER.Expr=="+")] <- "ER+"
@@ -32,20 +36,25 @@ Clinical$Group[which(Clinical$ER.Status=="ER-" & Clinical$Her2.Expr=="+")] <- "E
 Clinical$Group[which(Clinical$ER.Status=="ER+" & Clinical$Her2.Expr=="+")] <- "ER+/HER2+"
 Clinical$Group[which(Clinical$ER.Status=="ER+" & Clinical$Her2.Expr=="-")] <- "ER+/HER2-"
 Clinical$Group <- factor(Clinical$Group)
+Clinical <- Clinical[which(Clinical$Group=="ER+/HER2-"),]
+all.lr <- all.lr[,which(colnames(all.lr) %in% Clinical$METABRIC.ID)]
+all.dr <- all.dr[,which(colnames(all.dr) %in% Clinical$METABRIC.ID)]
+Clinical.LR <- Clinical[which(Clinical$METABRIC.ID %in% colnames(all.lr)),]
+Clinical.LR <- Clinical.LR[match(colnames(all.lr), Clinical.LR$METABRIC.ID),]
 Clinical.DR <- Clinical[which(Clinical$METABRIC.ID %in% colnames(all.dr)),]
 Clinical.DR <- Clinical.DR[match(colnames(all.dr), Clinical.DR$METABRIC.ID),]
 
-pos <- t(apply(all.dr, 1, function(x) tapply(x, Clinical.DR$Group, mean)))
-pos.dr <- pos[,1:2]
 
 
 
 coliClust <- c('#FF5500', '#00EE76', '#CD3278','#00C5CD', '#B5D0D2', '#8B0000',
                '#FFFF40', '#0000CD', '#FFAA00', '#EE82EE', '#7D26CD')
 
-TOT <- ncol(dr.INTCLUST.mean)
-res <- data.frame(X=c(dr.INTCLUST.mean), Year=rep(times, TOT), Relapse=rep(c("Distant Relapse"), c(TOT*5)),
-                  IntClust=rep(rep(colnames(dr.INTCLUST.mean), rep(5, TOT)), 1), li=c(dr.INTCLUST.mean) - 1.96*c(dr.INTCLUST.SE), ui=c(dr.INTCLUST.mean) + 1.96*c(dr.INTCLUST.SE))
+ss <- paste0("n=", sapply(lr, function(x) ncol(x)-1))
+TOT <- ncol(lr.INTCLUST.mean)
+res <- data.frame(X=c(lr.INTCLUST.mean, dr.INTCLUST.mean), Year=rep(times, TOT*2), Relapse=rep(c("Loco-regional Relapse",
+                                                                                      "Distant Relapse"), c(TOT*5, TOT*5)),
+                  IntClust=rep(rep(colnames(lr.INTCLUST.mean), rep(5, TOT)), 2), li=c(lr.INTCLUST.mean, dr.INTCLUST.mean) - 1.96*c(lr.INTCLUST.SE, dr.INTCLUST.SE), ui=c(lr.INTCLUST.mean, dr.INTCLUST.mean) + 1.96*c(lr.INTCLUST.SE, dr.INTCLUST.SE))
 res$IntClust <- factor(res$IntClust, levels=c(1:3, "4ER+", "4ER-", 5:10),
                        labels=c(1:3, "4ER+", "4ER-", 5:10))
 res$pch <- 19
@@ -53,11 +62,17 @@ res$colr <- coliClust[as.numeric(res$IntClust)]
 
 res <- subset(res, IntClust %in% c(3, 1, 2, 6, 9))
 res$IntClust <- factor(res$IntClust, levels=c(3, 1, 6, 9, 2))
-print(summary(res))
+ICModel <- res
+
+## Top Plot
+
+pdf("FigureS5a.pdf", width=12, height=7)
+library(Hmisc)
+library(survival)
 
 
 par(mfrow=c(1, 2))
-sub.res <- subset(res, Relapse=="Distant Relapse")
+sub.res <- subset(ICModel, Relapse=="Distant Relapse")
 Y <- sub.res[order(sub.res$Year, sub.res$IntClust),]
 Y$Dist <- 1:nrow(Y)
 Y$Dist <- Y$Dist + rep(c(0, 2, 4, 6, 8), rep(5,5))
@@ -77,17 +92,14 @@ box()
 
 legend("topleft", bty="n", lwd=2, pch=19, col=coliClust[c(1, 2, 3, 7, 10)],
        legend=paste("IC", c(1, 2, 3, 6, 9), sep=""), cex=1.2)
-legend("topright", bty="n", lwd=2, lty=1, col=c("black", "blue"),
-       legend=c("ER+/HER2-", "ER+/HER2+"), cex=1.2)
 
 
-segments(x0=Y$Dist[seq(from=1, by=5, length=5)]-0.85,
-         y0=pos.dr[,1], x1=Y$Dist[seq(from=5, by=5, length=5)]+0.85,
-         y1=pos.dr[,1], col="blue")
-segments(x0=Y$Dist[seq(from=1, by=5, length=5)]-0.85,
-         y0=pos.dr[,2], x1=Y$Dist[seq(from=5, by=5, length=5)]+0.85,
-         y1=pos.dr[,2], col="black")
+library(Hmisc)
+load(file="../Models/IntClust_AllProbs.RData")
+library(survival)
 
+lr <- mapply(function(x,y) x[,-1] + y[,-1], x=plc, y=pld)
+lr <- mapply(function(x,y) x + y[,-1], x=lr, y=pldc)
 
 dr <- mapply(function(x,y) x[,-1] + y[,-1], x=psd, y=psdc)
 dr <- mapply(function(x,y) x + y[,-1], x=dr, y=psdo)
@@ -96,12 +108,14 @@ dr <- mapply(function(x,y) x + y[,-1], x=dr, y=psldc)
 dr <- mapply(function(x,y) x + y[,-1], x=dr, y=psldo)
 dr <- mapply(function(x,y) x + y[,-1], x=dr, y=psc)
 
+all.lr <- do.call("cbind", lr)
+all.dr <- do.call("cbind", dr)
 
 
 times <-  ps[[1]][,1]
 
-all.dr <- do.call("cbind", dr)
-Clinical <- read.table(file="TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+
+Clinical <- read.table(file="../../TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
 Clinical$ER.Status <- factor(Clinical$ER.Status,
                              levels=c("neg", "pos"), labels=c("ER-", "ER+"))
 Clinical$ER.Status[which(is.na(Clinical$ER.Status) & Clinical$ER.Expr=="+")] <- "ER+"
@@ -112,64 +126,71 @@ Clinical$Group[which(Clinical$ER.Status=="ER-" & Clinical$Her2.Expr=="+")] <- "E
 Clinical$Group[which(Clinical$ER.Status=="ER+" & Clinical$Her2.Expr=="+")] <- "ER+/HER2+"
 Clinical$Group[which(Clinical$ER.Status=="ER+" & Clinical$Her2.Expr=="-")] <- "ER+/HER2-"
 Clinical$Group <- factor(Clinical$Group)
+Clinical <- Clinical[which(Clinical$Group=="ER+/HER2-"),]
+all.lr <- all.lr[,which(colnames(all.lr) %in% Clinical$METABRIC.ID)]
+all.dr <- all.dr[,which(colnames(all.dr) %in% Clinical$METABRIC.ID)]
+Clinical.LR <- Clinical[which(Clinical$METABRIC.ID %in% colnames(all.lr)),]
+Clinical.LR <- Clinical.LR[match(colnames(all.lr), Clinical.LR$METABRIC.ID),]
 Clinical.DR <- Clinical[which(Clinical$METABRIC.ID %in% colnames(all.dr)),]
 Clinical.DR <- Clinical.DR[match(colnames(all.dr), Clinical.DR$METABRIC.ID),]
-Clinical.DR <- subset(Clinical.DR, Group %in% c("ER-/HER2+", "ER+/HER2-"))
-
-all.dr <- all.dr[,which(colnames(all.dr) %in% Clinical.DR$METABRIC.ID)]
-dr.INTCLUST.mean <- t(apply(all.dr, 1, function(x) tapply(x, Clinical.DR$iC10, mean)))
-dr.INTCLUST.SE <- t(apply(all.dr, 1, function(x) tapply(x, Clinical.DR$iC10, function(y) sd(y)/sqrt(length(y)))))
-
-res <- data.frame(X=c(dr.INTCLUST.mean), Year=rep(times, TOT), Relapse=rep(c("Distant Relapse"), c(TOT*5)),
-                  IntClust=rep(rep(colnames(dr.INTCLUST.mean), rep(5, TOT)), 1), li=c(dr.INTCLUST.mean) - 1.96*c(dr.INTCLUST.SE), ui=c(dr.INTCLUST.mean) + 1.96*c(dr.INTCLUST.SE))
-res$IntClust <- factor(res$IntClust, levels=c(1:3, "4ER+", "4ER-", 5:10),
-                       labels=c(1:3, "4ER+", "4ER-", 5:10))
-res$pch <- 19
-res$colr <- coliClust[as.numeric(res$IntClust)]
-res$IntClust <- factor(res$IntClust, levels=c(3, 1, 6, 9, 2))
-pos <- t(apply(all.dr, 1, function(x) tapply(x, Clinical.DR$Group, mean)))
-pos.dr <- pos[,1:2]
 
 
+IC.lr <- all.lr[,match(Clinical.LR$METABRIC.ID, colnames(all.lr))]
+IC.dr <- all.dr[,match(Clinical.DR$METABRIC.ID, colnames(all.dr))]
+IC.lr <- IC.lr[,which(Clinical.LR$iC10 %in% c(1, 2, 6, 9))]
+IC.dr <- IC.dr[,which(Clinical.DR$iC10 %in% c(1, 2, 6, 9))]
+Clinical.LR <- subset(Clinical.LR, iC10 %in% c(1, 2, 6, 9))
+Clinical.DR <- subset(Clinical.DR, iC10 %in% c(1, 2, 6, 9))
+## m1 <- manova(t(IC.lr) ~ Clinical.LR$iC10)
+## m3 <- manova(t(IC.dr) ~ Clinical.DR$iC10)
+
+library(multcomp)
+res <- matrix(NA, nrow=6, ncol=5)
+for (i in 1:5) {
+    tmp <- data.frame(y=asin(IC.lr[i,]), iC10=Clinical.LR$iC10)
+    m <- lm(y ~ iC10, data=tmp)
+    ct <- print(summary(glht(m, linfct = mcp(iC10 = "Tukey"))))
+    res[,i] <- ct$test$pvalues
+}
+ICM.LR <- data.frame(Contr=names(coef(ct)),res)
+library(multcomp)
+res <- matrix(NA, nrow=6, ncol=5)
+for (i in 1:5) {
+    tmp <- data.frame(y=asin(IC.dr[i,]), iC10=Clinical.DR$iC10)
+    m <- lm(y ~ iC10, data=tmp)
+    ct <- print(summary(glht(m, linfct = mcp(iC10 = "Tukey"))))
+    res[,i] <- ct$test$pvalues
+}
+ICM.DR <- data.frame(Contr=names(coef(ct)),res)
+
+
+
+sub.res <- subset(ICModel, Relapse=="Loco-regional Relapse")
 Y <- sub.res[order(sub.res$Year, sub.res$IntClust),]
 Y$Dist <- 1:nrow(Y)
 Y$Dist <- Y$Dist + rep(c(0, 2, 4, 6, 8), rep(5,5))
-plot(X ~ Dist, data=Y, ylim=c(0,1), axes=F, col=Y$col, pch=Y$pch,
-     ylab="Probability of having distant relapse", xlab="Years after surgery", main="a",
-     cex.axis=1.5, cex.lab=1.5)
+plot(X ~ Dist, data=Y, ylim=c(0,1), axes=F, col=Y$col, pch=Y$pch, ylab="Probability of distant relapse/cancer death", xlab="Years after loco-regional relapse", main="b", cex.axis=1.5, cex.lab=1.5)
 usr <- par('usr')
 rect(Y$Dist[seq(from=1, by=5, length=5)]-0.85, usr[3],
      Y$Dist[seq(from=5, by=5, length=5)]+0.85, usr[4],
-     col=adjustcolor('grey', alpha=0.4), border=NA, cex=1.5)
+     col=adjustcolor('grey', alpha=0.4), border=NA, cex=2)
 points(li ~ Dist, data=Y, pch="-", col=Y$col, cex=2)
 points(ui ~ Dist, data=Y, pch="-", col=Y$col, cex=2)
 segments(Y$Dist, Y$li, Y$Dist, Y$ui, col=Y$col, cex=2)
 axis(2)
 axis(1, at=unique(Y$Dist)[seq(from=3, by=5, length=5)] - 0.5, labels=c(2, 5, 10, 15, 20))
 box()
-print(summary(res))
-legend("topleft", bty="n", lwd=2, pch=19, col=coliClust[c(1, 2, 3, 7, 10)],
-       legend=paste("IC", c(1, 2, 3, 6, 9), sep=""), cex=1.2)
-legend("topright", bty="n", lwd=2, lty=1, col=c("black", "blue"),
-       legend=c("ER+/HER2-", "ER+/HER2+"), cex=1.2)
-
-
-segments(x0=Y$Dist[seq(from=1, by=5, length=5)]-0.85,
-         y0=pos.dr[,1], x1=Y$Dist[seq(from=5, by=5, length=5)]+0.85,
-         y1=pos.dr[,1], col="blue")
-segments(x0=Y$Dist[seq(from=1, by=5, length=5)]-0.85,
-         y0=pos.dr[,2], x1=Y$Dist[seq(from=5, by=5, length=5)]+0.85,
-         y1=pos.dr[,2], col="black")
+dev.off()
 
 ##########################################################
 ##########################################################
 ##########################################################
 # Bottom panel
 
-
+pdf("FigureS5b.pdf", width=12, height=5)
 library(survival)
 
-Clinical <- read.table(file="TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+Clinical <- read.table(file="../../TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
 Clinical$NaturalDeath <- 1 * (Clinical$Last.Followup.Status %in% c("d", "d-o.c."))
 
 ## We remove Samples with no follow-up time
@@ -263,7 +284,7 @@ ui[which(max.obs<0.5)] <- NA
 
 
 par(mfrow=c(1,4))
-load(file="./Models/IndivProbs/IntClust_AllProbs.RData")
+load(file="../Models/IntClust_AllProbs.RData")
 
 
 tmp <- mapply(function(x, y) x[,-1]+y[,-1], x=pld, y=plc)
@@ -395,5 +416,5 @@ if (length(correct.ids>0)) {
 axis(2)
 axis(1, at=1:11, sub(" RELAPSE", "", names(res))[dd], cex.axis=0.9, las=2)
 box()
-
+dev.off()
 

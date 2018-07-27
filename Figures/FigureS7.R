@@ -1,7 +1,9 @@
+rm(list=ls())
 ## Top panel
 
 library(Hmisc)
-load(file="./Models/IndivProbs/Pam50_AllProbs.RData")
+pdf("FigureS7a.pdf", width=9, height=4)
+load(file="../Models/Pam50_AllProbs.RData")
 library(survival)
 
 lr <- mapply(function(x,y) x[,-1] + y[,-1], x=psl, y=pslc)
@@ -28,6 +30,8 @@ dr.INTCLUST.SE <- sapply(dr, function(x) apply(x, 1, function(y) sd(y)/sqrt(leng
 
 coliClust <- c("#E41A1C", "#FB9A99", "#1F78B4", "#A6CEE3", "#66A61E")
 ss <- paste0("n=", sapply(lr, function(x) ncol(x)))
+names(ss) <- names(lr)
+names(coliClust) <- names(lr)
 n <- ncol(lr.INTCLUST.mean)
 res <- data.frame(X=c(lr.INTCLUST.mean, dr.INTCLUST.mean), Year=rep(times, n*2), Relapse=rep(c("Loco-regional Relapse",
                                                                                       "Distant Relapse"), c(n*5, n*5)),
@@ -37,7 +41,9 @@ res$pch[which(res$Relapse=="Distant Relapse")] <- 17
 res$colr <- "olivedrab"
 res$colr[which(res$Relapse=="Distant Relapse")] <- "black"
 res$IntClust <- factor(res$IntClust, levels=c("LumA", "Normal", "Basal", "LumB", "Her2"))
-coliClust <- coliClust[c(3, 5, 1, 4, 2)]
+ss <- ss[levels(res$IntClust)]
+coliClust <- coliClust[levels(res$IntClust)]
+## coliClust <- coliClust[c(3, 5, 1, 4, 2)]
 
 pp <- xyplot(X ~ Year| IntClust, groups=Relapse, data=res,
              layout=c(n, 1, 1), ylab="Probability of relapse", xlab="Years after surgery", ylim=c(0, 0.65), cex=2,
@@ -59,16 +65,17 @@ pp <- xyplot(X ~ Year| IntClust, groups=Relapse, data=res,
              }, auto.key=T, scales=list(x=list(at=c(2, 5, 10, 15, 20)))
     )
 print(pp)
-
+dev.off()
 ####################################################
 ## Bottom panel
 
 
+pdf("FigureS7b.pdf", width=9, height=3)
 library(survival)
 
 ## par(mfrow=c(2,2))
 
-Clinical <- read.table(file="TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+Clinical <- read.table(file="../../TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
 Clinical$NaturalDeath <- 1 * (Clinical$Last.Followup.Status %in% c("d", "d-o.c."))
 
 ## We remove Samples with no follow-up time
@@ -78,7 +85,7 @@ if (length(ids)>0) Clinical <- Clinical[-ids,]
 ## We remove Samples with no follow-up time or death known
 
 ## We remove samples with stage 4
-Clinical <- Clinical[which(Clinical$Stage!=4),]
+Clinical <- Clinical[-which(Clinical$Stage==4),]
 
 ## We remove benign, DCIS or PHYL
 bad.hist <- which(Clinical$Histological.Type %in% c("BENIGN", "PHYL"))
@@ -163,7 +170,7 @@ ui <- mapply(function(x,y) y$time[x], x=ui, y=m1[6:10])
 ui[which(max.obs<0.5)] <- NA
 
 
-load(file="./Models/IndivProbs/Pam50_AllProbs.RData")
+load(file="../Models/Pam50_AllProbs.RData")
 
 par(mfrow=c(1,4))
 
@@ -217,6 +224,7 @@ if (length(correct.ids>0)) {
     }
 axis(2)
 axis(1, at=1:5, sub(" RELAPSE", "", names(res))[dd], cex.axis=0.9, las=2)
+text(c(5), c(10), c("*"), cex=0.9)
 box()
 
 
@@ -295,6 +303,6 @@ if (length(correct.ids>0)) {
 axis(2)
 axis(1, at=1:5, sub(" RELAPSE", "", names(res))[dd], cex.axis=0.9, las=2)
 box()
-
+dev.off()
 
 

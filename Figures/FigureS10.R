@@ -1,3 +1,4 @@
+rm(list=ls())
 library(grid)
 library(multcomp)
 library(png)
@@ -24,8 +25,8 @@ maxpiesize <- unit(1, "inches")
 ####################################
 
 
-Rec <- read.table("TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
-Rec <- Rec[which(Rec$Stage!=4),]
+Rec <- read.table("../../TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=F)
+Rec <- Rec[-which(Rec$Stage==4),]
 ## We remove benign, DCIS or PHYL
 bad.hist <- which(Rec$Histological.Type %in% c("BENIGN", "PHYL"))
 if (length(bad.hist)>0) Rec <- Rec[-bad.hist,]
@@ -36,7 +37,7 @@ Rec$T <- Rec$T/365.25
 Rec$TLR <- Rec$TLR/365.25
 Rec$TDR <- Rec$TDR/365.25
 Rec$TIME.RELAPSE <- Rec$TIME.RELAPSE/365.25
-Clinical <- read.table(file="~/Documents/Projects/Metastasis/Metastasis/Paper/Draft/MetabricClinicalMolecularDataset.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+Clinical <- read.table(file="../../TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
 Clinical <- Clinical[,c('METABRIC.ID', 'ER.Expr', 'Her2.Expr')]
 Rec <- merge(Rec, Clinical, all.x=T, sort=F)
 Rec$ER.Status <- factor(Rec$ER.Status,

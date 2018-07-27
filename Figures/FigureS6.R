@@ -1,6 +1,8 @@
+rm(list=ls())
 ## Top panel
 library(Hmisc)
-load(file="./Models/IndivProbs/FourGroups_AllProbs.RData")
+pdf("FigureS6a.pdf", width=9, height=4)
+load(file="../Models/FourGroups_AllProbs.RData")
 library(survival)
 
 lr <- mapply(function(x,y) x[,-1] + y[,-1], x=psl, y=pslc)
@@ -26,7 +28,9 @@ dr.INTCLUST.mean <- sapply(dr, function(x) apply(x, 1, mean))
 dr.INTCLUST.SE <- sapply(dr, function(x) apply(x, 1, function(y) sd(y)/sqrt(length(y))))
 
 coliClust <- c("lightskyblue", "lightsalmon", "plum2", "wheat4")
+names(coliClust) <- c("ER+/HER2+", "ER+/HER2-", "ER-/HER2+", "ER-/HER2-")
 ss <- paste0("n=", sapply(lr, function(x) ncol(x)))
+names(ss) <- names(lr)
 n <- ncol(lr.INTCLUST.mean)
 res <- data.frame(X=c(lr.INTCLUST.mean, dr.INTCLUST.mean), Year=rep(times, n*2), Relapse=rep(c("Loco-regional Relapse",
                                                                                       "Distant Relapse"), c(n*5, n*5)),
@@ -36,7 +40,8 @@ res$pch[which(res$Relapse=="Distant Relapse")] <- 17
 res$colr <- "olivedrab"
 res$colr[which(res$Relapse=="Distant Relapse")] <- "black"
 res$IntClust <- factor(res$IntClust, levels=c("ER+/HER2-", "ER-/HER2-", "ER+/HER2+", "ER-/HER2+"))
-coliClust <- coliClust[c(2, 4, 1, 3)]
+ss <- ss[levels(res$IntClust)]
+coliClust <- coliClust[levels(res$IntClust)]
 pp <- xyplot(X ~ Year| IntClust, groups=Relapse, data=res,
              layout=c(n, 1, 1), ylab="Probability of relapse", xlab="Years after surgery", ylim=c(0, 0.65),
              par.settings = list(superpose.symbol = list(pch=c(17, 19), col=c("black", "olivedrab")),
@@ -56,15 +61,17 @@ pp <- xyplot(X ~ Year| IntClust, groups=Relapse, data=res,
                  panel.text(10, 0.6, labels=ss[panel.number()], outer=T, cex=0.75)
              }, auto.key=T)
 print(pp)
-
+dev.off()
 
 
 
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 ## Bottom panel
+rm(list=ls())
+pdf("FigureS6b.pdf", width=9, height=3)
 library(survival)
 
-Clinical <- read.table(file="TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+Clinical <- read.table(file="../../TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
 Clinical$NaturalDeath <- 1 * (Clinical$Last.Followup.Status %in% c("d", "d-o.c."))
 
 ## We remove Samples with no follow-up time
@@ -74,7 +81,7 @@ if (length(ids)>0) Clinical <- Clinical[-ids,]
 ## We remove Samples with no follow-up time or death known
 
 ## We remove samples with stage 4
-Clinical <- Clinical[which(Clinical$Stage!=4),]
+Clinical <- Clinical[-which(Clinical$Stage==4),]
 
 ## We remove benign, DCIS or PHYL
 bad.hist <- which(Clinical$Histological.Type %in% c("BENIGN", "PHYL"))
@@ -157,7 +164,7 @@ ui <- mapply(function(x,y) y$time[x], x=ui, y=m1[5:8])
 ui[which(max.obs<0.5)] <- NA
 
 
-load(file="./Models/IndivProbs/FourGroups_AllProbs.RData")
+load(file="../Models/FourGroups_AllProbs.RData")
 
 par(mfrow=c(1,4))
 
@@ -168,9 +175,10 @@ INTCLUST.sd <- mapply(function(i,j) i + j[,-1], i=mapply(function(x, y) x[,-1]+y
 INTCLUST.sd <- sapply(INTCLUST.sd, function(x) apply(x, 1, function(z) sd(z)/sqrt(length(z))))
 
 coliClust <- c("lightskyblue", "lightsalmon", "plum2", "wheat4")
+names(coliClust) <- c("ER+/HER2+", "ER+/HER2-", "ER-/HER2+", "ER-/HER2-")
 times <-  pl[[1]][,1]
 
-
+coliClust <- coliClust[colnames(INTCLUST.mean)]
 plot(times, rep(0, length(times)), type="n",
      ylim=c(0,1), xlim=c(0, 10), xlab="Years after loco-regional relapse", main="",
      ylab="Probability of distant relapse or cancer-related death")
@@ -187,6 +195,8 @@ for (id in 1:4) {
 
 
 
+coliClust <- c("lightskyblue", "lightsalmon", "plum2", "wheat4")
+names(coliClust) <- c("ER+/HER2+", "ER+/HER2-", "ER-/HER2+", "ER-/HER2-")
 
 dd <- order(res)
 library(rms)
@@ -212,6 +222,10 @@ axis(1, at=1:4, sub(" RELAPSE", "", names(res))[dd], cex.axis=0.9, las=2)
 box()
 
 
+coliClust <- c("lightskyblue", "lightsalmon", "plum2", "wheat4")
+names(coliClust) <- c("ER+/HER2+", "ER+/HER2-", "ER-/HER2+", "ER-/HER2-")
+
+coliClust <- coliClust[colnames(INTCLUST.mean)]
 times <- pdc[[1]][,1]
 INTCLUST.mean <- sapply(pdc, function(x) apply(x[,-1], 1, mean))
 INTCLUST.sd <- sapply(pdc, function(x) apply(x[,-1], 1, function(z) sd(z)/sqrt(length(z))))
@@ -263,6 +277,8 @@ ui <- lapply(ui, function(x) {
 ui <- mapply(function(x,y) y$time[x], x=ui, y=m1[5:8])
 ui[which(max.obs<0.5)] <- NA
 
+coliClust <- c("lightskyblue", "lightsalmon", "plum2", "wheat4")
+names(coliClust) <- c("ER+/HER2+", "ER+/HER2-", "ER-/HER2+", "ER-/HER2-")
 dd <- order(res)
 library(rms)
 ui[which(is.na(ui))] <- Inf
@@ -287,3 +303,4 @@ axis(1, at=1:4, sub(" RELAPSE", "", names(res))[dd], cex.axis=0.9, las=2)
 box()
 
 
+dev.off()

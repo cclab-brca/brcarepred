@@ -1,5 +1,6 @@
+rm(list=ls())
 cols.er <- c("olivedrab", "red")
-Clinical <- read.table(file="TableS5.txt", header=T, sep="\t", quote="", comment.char="")
+Clinical <- read.table(file="../../TableS5.txt", header=T, sep="\t", quote="", comment.char="")
 library(cmprsk)
 
 ## We remove Samples with no follow-up time
@@ -9,7 +10,7 @@ if (length(ids)>0) Clinical <- Clinical[-ids,]
 ## We remove Samples with no follow-up time or death known
 
 ## We remove samples with stage 4
-Clinical <- Clinical[which(Clinical$Stage!=4),]
+Clinical <- Clinical[-which(Clinical$Stage==4),]
 
 ## We remove Samples with no follow-up time or death known
 Clinical <- Clinical[which(!is.na(Clinical$T)),]

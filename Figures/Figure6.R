@@ -1,3 +1,4 @@
+rm(list=ls())
 
 library(survival)
 library(RColorBrewer)
@@ -8,8 +9,8 @@ library(RColorBrewer)
 ####################################################################
 
 library(survival)
-X <- read.table(file="TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=FALSE)
-X <- X[which(X$Stage!=4),]
+X <- read.table(file="../../TableS7.txt", header=TRUE, sep="\t", stringsAsFactors=FALSE)
+X <- X[-which(X$Stage==4),]
 
 ## We remove benign, DCIS or PHYL
 bad.hist <- which(X$Histological.Type %in% c("BENIGN", "PHYL"))
@@ -65,7 +66,6 @@ for (i in ID) {
         feo <- data.frame(ID=i, time1=time1, time2=time2,
                           status=1*(!is.na(tmp$SITE[j])),
                           ER=tmp$ER.Status[1],
-                              Pam50=tmp$Pam50Subtype[1], iC10=tmp$iC10[1],
                           enum=j)
         AG <- rbind(AG, feo)
         time1 <- time2
@@ -75,7 +75,6 @@ for (i in ID) {
         feo <- data.frame(ID=i, time1=time1, time2=tmp$T[j-1],
                           status=0,
                           ER=tmp$ER.Status[1],
-                              Pam50=tmp$Pam50Subtype[1], iC10=tmp$iC10[1],
                           enum=j)
         AG <- rbind(AG, feo)
     }
@@ -148,7 +147,7 @@ for (i in ID) {
                 feo <- data.frame(ID=i, time1=time1,
                               time2=j,
                               Outcome="CANCERDEATH",
-                              status=0, iC10=tmp$iC10[1],
+                              status=0,
                               ER=tmp$ER.Status[1], LN=tmp$LN[1],
                               AGE=tmp$AGE[1], GRADE=tmp$GRADE[1],
                               SIZE=tmp$SIZE[1])
@@ -158,7 +157,7 @@ for (i in ID) {
             feo <- data.frame(ID=i, time1=time1,
                               time2=j,
                               Outcome="OTHERDEATH",
-                              status=0,iC10=tmp$iC10[1],
+                              status=0,
                               ER=tmp$ER.Status[1], LN=tmp$LN[1],
                               AGE=tmp$AGE[1], GRADE=tmp$GRADE[1],
                               SIZE=tmp$SIZE[1])
@@ -174,7 +173,6 @@ for (i in ID) {
                           time2=tmp$T[1],
                           Outcome="CANCERDEATH",
                               status=1 * (tmp$DeathBreast[1]==1),
-                              iC10=tmp$iC10[1],
                           ER=tmp$ER.Status[1], LN=tmp$LN[1],
                           AGE=tmp$AGE[1], GRADE=tmp$GRADE[1],
                           SIZE=tmp$SIZE[1])
@@ -185,7 +183,6 @@ for (i in ID) {
                           time2=tmp$T[1],
                           Outcome="OTHERDEATH",
                               status=1 * (tmp$DeathBreast[1]==0 & tmp$Death[1]==1),
-                              iC10=tmp$iC10[1],
                           ER=tmp$ER.Status[1], LN=tmp$LN[1],
                           AGE=tmp$AGE[1], GRADE=tmp$GRADE[1],
                           SIZE=tmp$SIZE[1])
@@ -216,8 +213,6 @@ CR2$LIVER.CD <- CR2$LIVER * (CR2$Outcome=="CANCERDEATH")
 CR2$BONE.CD <- CR2$BONE * (CR2$Outcome=="CANCERDEATH")
 CR2$OTHER.CD <- CR2$OTHER * (CR2$Outcome=="CANCERDEATH")
 CR2$enum.CD <- CR2$enum * (CR2$Outcome=="CANCERDEATH")
-CR2$iC10.CD <- CR2$iC10
-CR2$iC10.CD[which(CR2$Outcome!="CANCERDEATH")] <- NA
 CR2$LN.OT <- CR2$LN * (CR2$Outcome=="OTHERDEATH")
 CR2$GRADE.OT <- CR2$GRADE * (CR2$Outcome=="OTHERDEATH")
 CR2$SIZE.OT <- CR2$SIZE * (CR2$Outcome=="OTHERDEATH")

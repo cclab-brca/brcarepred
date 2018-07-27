@@ -1,4 +1,6 @@
-load(file="ERM.RData")
+library(mstate)
+library(lattice)
+load(file="../Models/ERM.RData")
 fm <- fm2
 
 model.cofs <- data.frame(Name=names(coef(fm)), HR=summary(fm)$conf.int[,1], LI=summary(fm)$conf.int[,3], UI=summary(fm)$conf.int[,4])
@@ -35,7 +37,7 @@ panel.ci <- function(x, y, lx, ux, subscripts, pch = 16, ...)
                  angle = 90, code = 3, lwd=0.5)
 
 }
-
+model.cofs$Effect <- factor(model.cofs$Effect, levels=c("GRADE", "LN", "SIZE", "Time from Surgery", "Time from LR"))
 pdf("Figure2.pdf", width=9, height=7)
 print(with(model.cofs,
      dotplot(log(HR) ~ Time | Effect*ER,

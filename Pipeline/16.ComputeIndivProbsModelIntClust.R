@@ -59,7 +59,7 @@ class(newdata) <- c("msdata", "data.frame")
 attr(newdata, "trans") <- tra
 fitted <- msfit(m, newdata=newdata, trans=tra)
 library(brcarepred)
-tt <- c(seq(from=0, by=0.25), c(16:20))
+tt <- c(seq(from=0, to=20, by=0.25)
 pt <- list()
 system.time(pt[['DR']] <- getProbsDR(m, group=as.numeric(Clinical$Group[i]), newdata, timepoints=tt))
 system.time(pt[['LR']] <- getProbsLR(m, group=as.numeric(Clinical$Group[i]), newdata, timepoints=tt, compact=FALSE))
