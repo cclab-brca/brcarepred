@@ -16,7 +16,7 @@ library(lattice)
 ##################################
 ##################################
 
-Clinical <- read.table(file="TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
+Clinical <- read.table(file="../../TableS6.txt", header=T, sep="\t", quote="", comment.char="", stringsAsFactors=FALSE)
 Clinical$NaturalDeath <- 1 * (Clinical$Last.Followup.Status %in% c("d", "d-o.c."))
 
 ## We remove Samples with no follow-up time
@@ -58,11 +58,11 @@ Clinical$LN[which(Clinical$LN>=10)] <- 10
 Clinical$AGE <- Clinical$Age.At.Diagnosis
 Clinical$GRADE <- as.numeric(as.character(Clinical$Grade))
 Clinical$SIZE <- as.numeric(as.character(Clinical$Size))
-Clinical$HT <- 1 * (Clinical$HT!="null")
+Clinical$HT <- 1 * (Clinical$HT!="NO/NA")
 Clinical$HT <- factor(Clinical$HT, levels=c(0, 1), labels=c("NO", "YES"))
-Clinical$CT <- 1 * (Clinical$CT!="null")
+Clinical$CT <- 1 * (Clinical$CT!="NO/NA")
 Clinical$CT <- factor(Clinical$CT, levels=c(0, 1), labels=c("NO", "YES"))
-Clinical$RT[which(Clinical$RT %in% c("null", "NONE RECORDED IN LANTIS", "Nnne"))] <- 0
+Clinical$RT[which(Clinical$RT %in% c("NO/NA", "NONE RECORDED IN LANTIS", "Nnne"))] <- 0
 Clinical$RT[which(Clinical$RT!=0)] <- 1
 Clinical$RT <- factor(Clinical$RT, levels=c(0, 1), labels=c("NO", "YES"))
 Clinical$BS <- factor(Clinical$Breast.Surgery, levels=c("BREAST CONSERVING", "MASTECTOMY"), labels=c("BC", "M"))
@@ -112,7 +112,7 @@ for (ic in levels(ALL.CLINICAL$Group)) {
                       to=2,
                       trans=1,
                       Tstart=0,
-                      Tstop=Clinical$TLR[i],
+                      Tstop=min(Clinical$TLR[i],Clinical$TDR[i]),
                       status=Clinical$LR[i],
                       LN=Clinical$LN[i],
                       AGE=Clinical$AGE[i],
@@ -130,7 +130,7 @@ for (ic in levels(ALL.CLINICAL$Group)) {
                       to=3,
                       trans=2,
                       Tstart=0,
-                      Tstop=Clinical$TDR[i],
+                      Tstop=min(Clinical$TLR[i],Clinical$TDR[i]),
                       status=1 * (Clinical$LR[i]==0) * Clinical$DR[i],
                       LN=Clinical$LN[i],
                       AGE=Clinical$AGE[i],
@@ -148,7 +148,7 @@ for (ic in levels(ALL.CLINICAL$Group)) {
                       to=4,
                       trans=3,
                       Tstart=0,
-                      Tstop=Clinical$T[i],
+                      Tstop=min(Clinical$TLR[i],Clinical$TDR[i]),
                       status=1 * (Clinical$LR[i]==0 & Clinical$DR[i]==0) *
                           Clinical$DeathBreast[i],
                       LN=Clinical$LN[i],
@@ -167,7 +167,7 @@ for (ic in levels(ALL.CLINICAL$Group)) {
                       to=5,
                       trans=4,
                       Tstart=0,
-                      Tstop=Clinical$T[i],
+                      Tstop=min(Clinical$TLR[i],Clinical$TDR[i]),
                       status=1 * (Clinical$LR[i]==0 & Clinical$DR[i]==0) *
                           Clinical$NaturalDeath[i],
                       LN=Clinical$LN[i],
@@ -187,10 +187,10 @@ for (ic in levels(ALL.CLINICAL$Group)) {
                           to=3,
                           trans=5,
                           Tstart=Clinical$TLR[i],
-                          Tstop=Clinical$TDR[i],
+                          Tstop=min(Clinical$TDR[i],Clinical$T[i]),
                           status=Clinical$DR[i],
                           LN=Clinical$LN[i],
-                          AGE=Clinical$AGE[i],
+                          AGE=Clinical$AGE[i] + Clinical$TLR[i],
                           GRADE=Clinical$GRADE[i],
                           SIZE=Clinical$SIZE[i],
                           BS=Clinical$BS[i],
@@ -205,10 +205,10 @@ for (ic in levels(ALL.CLINICAL$Group)) {
                           to=4,
                           trans=6,
                           Tstart=Clinical$TLR[i],
-                          Tstop=Clinical$T[i],
+                          Tstop=min(Clinical$TDR[i],Clinical$T[i]),
                           status=1 * (Clinical$DR[i]==0) * Clinical$DeathBreast[i],
                           LN=Clinical$LN[i],
-                          AGE=Clinical$AGE[i],
+                          AGE=Clinical$AGE[i] + Clinical$TLR[i],
                           GRADE=Clinical$GRADE[i],
                           SIZE=Clinical$SIZE[i],
                           BS=Clinical$BS[i],
@@ -223,10 +223,10 @@ for (ic in levels(ALL.CLINICAL$Group)) {
                           to=5,
                           trans=7,
                           Tstart=Clinical$TLR[i],
-                          Tstop=Clinical$T[i],
+                          Tstop=min(Clinical$TDR[i],Clinical$T[i]),
                           status=1 * (Clinical$DR[i]==0) * Clinical$NaturalDeath[i],
                           LN=Clinical$LN[i],
-                          AGE=Clinical$AGE[i],
+                          AGE=Clinical$AGE[i] + Clinical$TLR[i],
                           GRADE=Clinical$GRADE[i],
                           SIZE=Clinical$SIZE[i],
                           BS=Clinical$BS[i],
@@ -254,7 +254,7 @@ for (ic in levels(ALL.CLINICAL$Group)) {
                           Tstop=Clinical$T[i],
                       status=Clinical$DeathBreast[i],
                           LN=Clinical$LN[i],
-                          AGE=Clinical$AGE[i],
+                          AGE=Clinical$AGE[i] + Clinical$TDR[i],
                           GRADE=Clinical$GRADE[i],
                           SIZE=Clinical$SIZE[i],
                           BS=Clinical$BS[i],
@@ -272,7 +272,7 @@ for (ic in levels(ALL.CLINICAL$Group)) {
                           Tstop=Clinical$T[i],
                           status=Clinical$NaturalDeath[i],
                           LN=Clinical$LN[i],
-                          AGE=Clinical$AGE[i],
+                          AGE=Clinical$AGE[i] + Clinical$TDR[i],
                           GRADE=Clinical$GRADE[i],
                           SIZE=Clinical$SIZE[i],
                           BS=Clinical$BS[i],
@@ -289,7 +289,6 @@ for (ic in levels(ALL.CLINICAL$Group)) {
 
 
 res <- all.X
-
 for (i in 1:length(res)) {
     res[[i]]$from <- res[[i]]$from + 5 * (i-1)
     res[[i]]$to <- res[[i]]$to + 5 * (i-1)
@@ -298,7 +297,7 @@ for (i in 1:length(res)) {
 
 res <- do.call("rbind", res)
 res$time <- res$Tstop-res$Tstart
-res <- res[,c(1:6, 17,7:15)]
+res <- res[,c(1:6, 17,7:11, 13:15)]
 
 class(res) <- c("msdata", "data.frame")
 attr(res, "trans") <- tra
@@ -315,6 +314,11 @@ res$AGE[which(!res$trans %in% nat.death)] <- 0
 res$GRADE[which(res$trans %in% nat.death)] <- 0
 res$SIZE[which(res$trans %in% nat.death)] <- 0
 res$LN[which(res$trans %in% nat.death)] <- 0
+
+res$AGE.PS <- res$AGE * (res$from %in% grep("PostSurgery", colnames(tra)))
+res$AGE.LR <- res$AGE * (res$from %in% grep("LocoregionalRelapse", colnames(tra)))
+res$AGE.DR <- res$AGE * (res$from %in% grep("DistantRelapse", colnames(tra)))
+res$AGE.PS.LR <- res$AGE.PS + res$AGE.LR
 
 res$GRADE.PS <- res$GRADE * (res$from %in% grep("PostSurgery", colnames(tra)))
 res$GRADE.LR <- res$GRADE * (res$from %in% grep("LocoregionalRelapse", colnames(tra)))
@@ -333,21 +337,21 @@ res$TLastSurgery.LR <- res$TLastSurgery * (res$from %in% grep("LocoregionalRelap
 res$TLastSurgery.DR <- res$TLastSurgery * (res$from %in% grep("DistantRelapse", colnames(tra)))
 
 
-m0 <- coxph(Surv(time, status) ~ strata(trans)  + AGE + SIZE + GRADE + LN + TLastSurgery, data=res)
+m0 <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + SIZE + GRADE + LN + TLastSurgery, data=res)
 
-fm <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS + GRADE.LR + GRADE.DR + SIZE.PS + SIZE.LR + SIZE.DR +
+fm <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + GRADE.LR + GRADE.DR + SIZE.PS + SIZE.LR + SIZE.DR +
                 LN.PS + LN.LR + LN.DR +
                     TLastSurgery.LR + TLastSurgery.DR, data=res)
 
-im <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS + SIZE.PS +
+im <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + SIZE.PS +
                 LN.PS +
                     TLastSurgery.LR + TLastSurgery.DR, data=res)
 
-m <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS + GRADE.R +
+m <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + GRADE.R +
                SIZE.PS + SIZE.LR + LN.PS + LN.R +
                     TLastSurgery + cluster(id), data=res)
 
-m <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS + GRADE.R +
+m <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + GRADE.R +
                SIZE.PS + SIZE.LR + LN.PS + LN.R +
                     TLastSurgery, data=res)
 
@@ -356,33 +360,33 @@ res$Risk <- factor(res$Group)
 levels(res$Risk) <- list("ER+Bad"=c("1", "2", "6", "9"),
                          "ER+Good"=c("3", "4ER+", "7", "8"),
                          "5"=c("5"), "ER-"=c("4ER-", "10"))
-mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS:Risk + GRADE.R +
+mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS:Risk + GRADE.R +
                SIZE.PS + SIZE.LR + LN.PS + LN.R +
                     TLastSurgery, data=res)
 anova(m, mAlt)
-mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS + GRADE.R:Risk +
+mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + GRADE.R:Risk +
                SIZE.PS + SIZE.LR + LN.PS + LN.R +
                     TLastSurgery, data=res)
 anova(m, mAlt)
 
-mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS + GRADE.R +
+mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + GRADE.R +
                SIZE.PS:Risk + SIZE.LR + LN.PS + LN.R +
                     TLastSurgery, data=res)
 anova(mAlt, m)
-mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS + GRADE.R +
+mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + GRADE.R +
                SIZE.PS + SIZE.LR:Risk + LN.PS + LN.R +
                     TLastSurgery, data=res)
 anova(mAlt, m)
-mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS + GRADE.R +
+mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + GRADE.R +
                SIZE.PS + SIZE.LR + LN.PS:Risk + LN.R +
                     TLastSurgery, data=res)
 anova(mAlt, m)
-mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS + GRADE.R +
+mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + GRADE.R +
                SIZE.PS + SIZE.LR + LN.PS + LN.R:Risk +
                     TLastSurgery, data=res)
 anova(mAlt, m)
 
-mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE + GRADE.PS + GRADE.R +
+mAlt <- coxph(Surv(time, status) ~ strata(trans)  + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + GRADE.R +
                SIZE.PS + SIZE.LR + LN.PS + LN.R  +
                     TLastSurgery:Risk, data=res)
 anova(mAlt, m)
@@ -418,6 +422,17 @@ rel.can <- c(1:4, 7, 9, 10:13, 16, 18, 19:22, 25, 27, 28:31, 34, 36, 37:40,
 newdata$AGE[which(!newdata$strata %in% nat.death)] <- 0
 newdata$TLastSurgery[which(newdata$strata %in% rel.can)] <- 0
 
+newdata$AGE.PS <- newdata$AGE * (newdata$strata %in%
+                                         as.vector(tra[grep("Post", rownames(tra)),
+                                                       grep("Nat", colnames(tra))]))
+newdata$AGE.LR <- newdata$AGE * (newdata$strata %in%
+                                         as.vector(tra[grep("Loco", rownames(tra)),
+                                                       grep("Nat", colnames(tra))]))
+newdata$AGE.DR <- newdata$AGE * (newdata$strata %in%
+                                         as.vector(tra[grep("Distant", rownames(tra)),
+                                                       grep("Nat", colnames(tra))]))
+newdata$AGE.PS.LR <- newdata$AGE.PS + newdata$AGE.LR
+
 newdata$GRADE.PS <- newdata$GRADE * (newdata$strata %in%
                                          as.vector(tra[grep("Post", rownames(tra)),
                                                        -grep("Nat", colnames(tra))]))
@@ -442,8 +457,17 @@ newdata$LN.R <- newdata$LN * (newdata$strata %in%
                                                        -grep("Nat", colnames(tra))]))
 
 
+## Adjust AGE with relapse
+## newdata$AGE[which(newdata$strata %in% seq(from=7, by=9, length=11))] <-
+## newdata$AGE[which(newdata$strata %in% seq(from=7, by=9, length=11))] +
+##     newdata$TLastSurgery[which(newdata$strata %in%
+##                                    seq(from=6, by=9, length=11))]
+## newdata$AGE[which(newdata$strata %in% seq(from=9,by=9, length=11))] <-
+##     newdata$AGE[which(newdata$strata %in% seq(from=9,by=9, length=11))] +
+##         newdata$TLastSurgery[which(newdata$strata %in%
+##                                        seq(from=8, by=9, length=11))]
 
 
 class(newdata) <- c("msdata", "data.frame")
 attr(newdata, "trans") <- tra
-save(m, res, Clinical, newdata, tra, cens, file="ICM.RData")
+save(m, res, Clinical, newdata, tra, cens, file="../Models/ICM.RData")
