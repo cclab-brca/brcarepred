@@ -1,6 +1,7 @@
 rm(list=ls())
+
 library(mstate)
-load("./Models/FourGroupsM.RData")
+load("./Models/ICM.RData")
 nat.death <- as.numeric((tra[,grep("NaturalDeath", colnames(tra))]))
 nat.death <- unique(na.omit(nat.death))
 i <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
@@ -36,6 +37,7 @@ newdata$AGE.LR <- newdata$AGE * (newdata$strata %in%
 newdata$AGE.DR <- newdata$AGE * (newdata$strata %in%
                                          as.vector(tra[grep("Distant", rownames(tra)),
                                                        grep("Nat", colnames(tra))]))
+
 newdata$GRADE.PS <- newdata$GRADE * (newdata$strata %in%
                                          as.vector(tra[grep("Post", rownames(tra)),
                                                        -grep("Nat", colnames(tra))]))
@@ -64,29 +66,27 @@ newdata$LN.R <- newdata$LN * (newdata$strata %in%
 
 class(newdata) <- c("msdata", "data.frame")
 attr(newdata, "trans") <- tra
-fitted <- msfit(m, newdata=newdata, trans=tra)
 library(brcarepred)
 tt <- seq(from=0, to=20, by=0.25)
 pt <- list()
 newdata.DR <- newdata
-newdata.DR$AGE.DR[which(newdata.DR$strata %in% seq(from=9,by=9, length=4))] <-
-    newdata.DR$AGE.DR[which(newdata.DR$strata %in% seq(from=9,by=9, length=4))] +
+newdata.DR$AGE.DR[which(newdata.DR$strata %in% seq(from=9,by=9, length=11))] <-
+    newdata.DR$AGE.DR[which(newdata.DR$strata %in% seq(from=9,by=9, length=11))] +
         newdata.DR$TLastSurgery[which(newdata.DR$strata %in%
-                                       seq(from=8, by=9, length=4))]
+                                       seq(from=8, by=9, length=11))]
 
-system.time(pt[['DR']] <- getProbsDR(m, group=as.numeric(Clinical$Group[i]), newdata.DR, timepoints=tt))
+system.time(pt[['DR']] <- getProbsDR(m, group=as.numeric(Clinical$Group[i]), newdata.DR, timepoints=tt, start=5))
 newdata.LR <- newdata
-newdata.LR$AGE.LR[which(newdata.LR$strata %in% seq(from=7, by=9, length=4))] <-
-newdata.LR$AGE.LR[which(newdata.LR$strata %in% seq(from=7, by=9, length=4))] +
+newdata.LR$AGE.LR[which(newdata.LR$strata %in% seq(from=7, by=9, length=11))] <-
+newdata.LR$AGE.LR[which(newdata.LR$strata %in% seq(from=7, by=9, length=11))] +
     newdata.LR$TLastSurgery[which(newdata.LR$strata %in%
-                                   seq(from=6, by=9, length=4))]
-newdata.LR$AGE.DR[which(newdata.LR$strata %in% seq(from=9,by=9, length=4))] <-
-newdata.LR$AGE.LR[which(newdata.LR$strata %in% seq(from=7, by=9, length=4))]
-
-system.time(pt[['LR']] <- getProbsLR(m, group=as.numeric(Clinical$Group[i]), newdata.LR, timepoints=tt, compact=FALSE))
+                                   seq(from=6, by=9, length=11))]
+newdata.LR$AGE.DR[which(newdata.LR$strata %in% seq(from=9,by=9, length=11))] <-
+newdata.LR$AGE.LR[which(newdata.LR$strata %in% seq(from=7, by=9, length=11))]
+system.time(pt[['LR']] <- getProbsLR(m, group=as.numeric(Clinical$Group[i]), newdata.LR, timepoints=tt, start=5, compact=FALSE))
 tt <- c(2, 5, 10, 15, 20)
-system.time(pt[['S']] <- getProbsS(m, group=as.numeric(Clinical$Group[i]), newdata, timepoints=tt, compact=FALSE))
+system.time(pt[['S']] <- getProbsS(m, group=as.numeric(Clinical$Group[i]), newdata, timepoints=tt, start=5, compact=FALSE))
 
-save(pt, file=paste0("./IndivProbs/FourGroupsTP_Patient", i, ".RData"))
+save(pt, file=paste0("./IndivProbs/ICTP_Patient", i, ".RData"))
 
-
+## Change start argument to 10 to get probs after 10 years relapse-free

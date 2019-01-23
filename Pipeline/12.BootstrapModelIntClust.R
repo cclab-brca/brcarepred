@@ -1,7 +1,7 @@
 rm(list=ls())
 ## Change group for the other IntClust
 
-load(file="ICM.RData")
+load(file="./Models/ICM.RData")
 Oldnewdata <- newdata
 source("mssampleOscar.R")
 library(mstate)
@@ -12,7 +12,7 @@ Times <- tmp[[1]]$time
 x <- Clinical
 nat.death <- as.numeric((tra[,grep("NaturalDeath", colnames(tra))]))
 nat.death <- unique(na.omit(nat.death))
-id <- as.numeric(Sys.getenv("LSB_JOBINDEX"))
+id <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 set.seed(3 * id)
 if (length(m$na.action) > 0) {
         good.ids <- as.character(unique(res[-(m$na.action),'id']))
@@ -32,16 +32,7 @@ for (i in as.numeric(as.character(indexes$indexes))) {
                           GRADE=x$GRADE[i],
                           SIZE=x$SIZE[i],
                           TLastSurgery=0)
-    tstate <- c(0,0,0,0,0)
-    if (x$LR[i]==1) {
-        newdata$TLastSurgery[sort(c(seq(from=5, length=11, by=9),
-                                 seq(from=6, length=11, by=9)))] <- x$TLR[i]
-        tstate[2] <- x$TLR[i]
-    }
-    if (x$DR[i]==1) {
-        newdata$TLastSurgery[seq(from=8, length=11, by=9)] <- x$TDR[i]
-        tstate[3] <- x$TDR[i]
-    }
+    tstate <- c(0,1,1,0,0)
     if (any(is.na(newdata$AGE))) newdata$AGE <-
             mean(x$AGE, na.rm=T)
         if (any(is.na(newdata$LN))) newdata$LN <-
@@ -57,6 +48,17 @@ for (i in as.numeric(as.character(indexes$indexes))) {
             names(which.max(table(x$BS)))
 
         newdata$AGE[which(!newdata$strata %in% nat.death)] <- 0
+
+newdata$AGE.PS <- newdata$AGE * (newdata$strata %in%
+                                             as.vector(tra[grep("Post", rownames(tra)),
+                                                           grep("Nat", colnames(tra))]))
+newdata$AGE.LR <- newdata$AGE * (newdata$strata %in%
+                                        as.vector(tra[c(grep("Loco", rownames(tra))),
+                                                       grep("Nat", colnames(tra))]))
+newdata$AGE.DR <- newdata$AGE * (newdata$strata %in%
+                                        as.vector(tra[c(grep("Distant", rownames(tra))),
+                                                       grep("Nat", colnames(tra))]))
+
     newdata$GRADE.PS <- newdata$GRADE * (newdata$strata %in%
                                              as.vector(tra[grep("Post", rownames(tra)),
                                                            -grep("Nat", colnames(tra))]))
@@ -80,7 +82,6 @@ newdata$LN.R <- newdata$LN * (newdata$strata %in%
                                                   grep("Distant", rownames(tra))),
                                                        -grep("Nat", colnames(tra))]))
 
-
     state <- (as.numeric(x$Group[i])-1) * 5 + 1
     tstate <- c(rep(rep(0, 5), as.numeric(x$Group[i])-1),
                 tstate, rep(rep(0, 5), 11-as.numeric(x$Group[i])))
@@ -98,7 +99,17 @@ newdata$LN.R <- newdata$LN * (newdata$strata %in%
     beta.state[42,77:78] <- coef(m)['TLastSurgery']
     beta.state[47,86:87] <- coef(m)['TLastSurgery']
     beta.state[52,95:96] <- coef(m)['TLastSurgery']
-
+    beta.state[2,7] <- coef(m)['AGE.LR']
+    beta.state[7,16] <- coef(m)['AGE.LR']
+    beta.state[12,25] <- coef(m)['AGE.LR']
+    beta.state[17,34] <- coef(m)['AGE.LR']
+    beta.state[22,43] <- coef(m)['AGE.LR']
+    beta.state[27,52] <- coef(m)['AGE.LR']
+    beta.state[32,61] <- coef(m)['AGE.LR']
+    beta.state[37,70] <- coef(m)['AGE.LR']
+    beta.state[42,79] <- coef(m)['AGE.LR']
+    beta.state[47,88] <- coef(m)['AGE.LR']
+    beta.state[52,97] <- coef(m)['AGE.LR']
     beta.state[3,8] <- coef(m)['TLastSurgery']
     beta.state[8,17] <- coef(m)['TLastSurgery']
     beta.state[13,26] <- coef(m)['TLastSurgery']
@@ -110,10 +121,18 @@ newdata$LN.R <- newdata$LN * (newdata$strata %in%
     beta.state[43,80] <- coef(m)['TLastSurgery']
     beta.state[48,89] <- coef(m)['TLastSurgery']
     beta.state[53,98] <- coef(m)['TLastSurgery']
+    beta.state[3,9] <- coef(m)['AGE.DR']
+    beta.state[8,18] <- coef(m)['AGE.DR']
+    beta.state[13,27] <- coef(m)['AGE.DR']
+    beta.state[18,36] <- coef(m)['AGE.DR']
+    beta.state[23,45] <- coef(m)['AGE.DR']
+    beta.state[28,54] <- coef(m)['AGE.DR']
+    beta.state[33,63] <- coef(m)['AGE.DR']
+    beta.state[38,72] <- coef(m)['AGE.DR']
+    beta.state[43,81] <- coef(m)['AGE.DR']
+    beta.state[48,90] <- coef(m)['AGE.DR']
+    beta.state[53,99] <- coef(m)['AGE.DR']
 
-
-    beta.state[seq(from=3, length=11, by=5),seq(from=8, length=11, by=9)] <-
-        coef(m)['TLastSurgery']
     fitted.Haz <- msfit(m, newdata=newdata, trans=tra)
     tmp <- try(oscar.mssample(fitted.Haz$Haz, trans=tra, clock="reset",
                               output="data",
@@ -173,7 +192,33 @@ xb$LN.R <- xb$LN * (xb$trans %in%
                         as.vector(tra[c(grep("Loco", rownames(tra)),
                                         grep("Distant", rownames(tra))),
                                       -grep("Nat", colnames(tra))]))
-    colnames(xb)[4] <- "time"
+    ## Adjust AGE with relapse
+xb$AGE[which(xb$from %in% c(2,3,7,8, 12,13, 17,18,22,23, 27, 28,
+                            32,33, 37, 38, 42, 43, 47, 48,
+                            52, 53) &
+                 xb$to %in% c(5, 10, 15, 20,25, 30, 35, 40, 45, 50,
+                              55))] <-
+                     xb$AGE[which(xb$from %in% c(2,3,7,8,12,13,17,18,22,23, 27, 28,
+                            32,33, 37, 38, 42, 43, 47, 48,
+                            52, 53) &
+                                      xb$to %in% c(5, 10,15,20,25,
+                                                   30, 35, 40, 45, 50, 55))] +
+        xb$Tstart[which(xb$from %in% c(2,3,7,8,12,13,17,18,22,23, 27, 28,
+                            32,33, 37, 38, 42, 43, 47, 48,
+                            52, 53) &
+                            xb$to %in% c(5, 10,15,20,25,30,35,40,45,50,55))]
+
+xb$AGE.PS <- xb$AGE * (xb$trans %in%
+                               as.vector(tra[grep("Post", rownames(tra)),
+                                             grep("Nat", colnames(tra))]))
+xb$AGE.LR <- xb$AGE * (xb$trans %in%
+                              as.vector(tra[c(grep("Loco", rownames(tra))),
+                                            grep("Nat", colnames(tra))]))
+xb$AGE.DR <- xb$AGE * (xb$trans %in%
+                              as.vector(tra[c(grep("Distant", rownames(tra))),
+                                            grep("Nat", colnames(tra))]))
+
+colnames(xb)[4] <- "time"
 
 class(xb) <- c("mstate", "data.frame")
 attr(xb, "trans") <- tra
@@ -181,16 +226,29 @@ xb$Tstop[which(!is.finite(xb$Tstop))] <- max(x$T, na.rm=T)
 xb$time <- xb$Tstop - xb$Tstart
 
 
-mb <- coxph(Surv(time, status) ~ strata(trans) + AGE + GRADE.PS + GRADE.R +                SIZE.PS + SIZE.LR +
+mb <- coxph(Surv(time, status) ~ strata(trans) + AGE.PS + AGE.LR + AGE.DR + GRADE.PS + GRADE.R +                SIZE.PS + SIZE.LR +
                 LN.PS + LN.R + TLastSurgery, data=xb)
 
 library(brcarepred)
 
 timepoints <- seq(from=0, to=20, by=0.25)
 pt.boot <- list()
-pt.boot[['DR']] <- getProbsDR(mb, group=1, Oldnewdata, timepoints=timepoints)
+Oldnewdata.DR <- Oldnewdata
+Oldnewdata.DR$AGE.DR[which(Oldnewdata.DR$strata %in% seq(from=9,by=9, length=11))] <-
+    Oldnewdata.DR$AGE.DR[which(Oldnewdata.DR$strata %in% seq(from=9,by=9, length=11))] +
+        Oldnewdata.DR$TLastSurgery[which(Oldnewdata.DR$strata %in%
+                                       seq(from=8, by=9, length=11))]
+pt.boot[['DR']] <- getProbsDR(mb, group=1, Oldnewdata.DR, timepoints=timepoints)
 
-pt.boot[['LR']] <- getProbsLR(mb, group=1, Oldnewdata, timepoints=timepoints, compact=F)
+Oldnewdata.LR <- Oldnewdata
+Oldnewdata.LR$AGE.LR[which(Oldnewdata.LR$strata %in% seq(from=7, by=9, length=11))] <-
+Oldnewdata.LR$AGE.LR[which(Oldnewdata.LR$strata %in% seq(from=7, by=9, length=11))] +
+    Oldnewdata.LR$TLastSurgery[which(Oldnewdata.LR$strata %in%
+                                   seq(from=6, by=9, length=11))]
+Oldnewdata.LR$AGE.DR[which(Oldnewdata.LR$strata %in% seq(from=9,by=9, length=11))] <-
+Oldnewdata.LR$AGE.LR[which(Oldnewdata.LR$strata %in% seq(from=7, by=9, length=11))]
+
+pt.boot[['LR']] <- getProbsLR(mb, group=1, Oldnewdata.LR, timepoints=timepoints, compact=F)
 
 timepoints <- c(seq(from=0, to=15, by=0.25), 16:20)
 system.time(pt.boot[['S']] <- getProbsS(mb, group=1, Oldnewdata, timepoints=timepoints, compact=FALSE))

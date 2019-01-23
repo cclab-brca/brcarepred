@@ -439,9 +439,15 @@ function (Haz, trans, history, beta.state, clock, output, tvec,
         ntr <- length(transs)
         if (ntr != 0) {
             transnos <- transs
+            ## new part
+            tstates[which(tstates>0)] <- Tstart
             for (tr in 1:ntr) Haz$Haz[Haz$trans == transnos[tr]] <- exp(sum(beta.state[,
                 transnos[tr]] * tstates)) * Haz$Haz[Haz$trans ==
                 transnos[tr]]
+            ## end new part
+            ## for (tr in 1:ntr) Haz$Haz[Haz$trans == transnos[tr]] <- exp(sum(beta.state[,
+            ##     transnos[tr]] * tstates)) * Haz$Haz[Haz$trans ==
+            ##     transnos[tr]]
             whh <- which(!is.na(match(Haz$trans, transnos)))
             if (clock == "forward") {
                 crs <- crsample(Haz[whh, ], tcond, censtime)

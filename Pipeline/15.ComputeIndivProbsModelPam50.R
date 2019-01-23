@@ -1,11 +1,11 @@
 rm(list=ls())
 library(mstate)
-load("Pam50M.RData")
+load("./Models/Pam50M.RData")
 nat.death <- as.numeric((tra[,grep("NaturalDeath", colnames(tra))]))
 nat.death <- unique(na.omit(nat.death))
-i <- as.numeric(Sys.getenv("LSB_JOBINDEX"))
+i <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
+print(i)
 
-if(!file.exists(paste0("./IndivProbs/Pam50TP_Patient", i, ".RData"))) {
 
 missing <- unique(res[m$na.action,'id'])
 Clinical <- Clinical[-which(Clinical$METABRIC.ID %in% missing),]
@@ -27,6 +27,16 @@ rel.can <- c(1:4, 7, 9, 10:13, 16, 18, 19:22, 25, 27, 28:31, 34, 36, 37:40,
              79, 81, 82:85, 88, 90, 91:94, 97, 99)
 newdata$AGE[which(!newdata$strata %in% nat.death)] <- 0
 newdata$TLastSurgery[which(newdata$strata %in% rel.can)] <- 0
+
+newdata$AGE.PS <- newdata$AGE * (newdata$strata %in%
+                                         as.vector(tra[grep("Post", rownames(tra)),
+                                                       grep("Nat", colnames(tra))]))
+newdata$AGE.LR <- newdata$AGE * (newdata$strata %in%
+                                         as.vector(tra[grep("Loco", rownames(tra)),
+                                                       grep("Nat", colnames(tra))]))
+newdata$AGE.DR <- newdata$AGE * (newdata$strata %in%
+                                         as.vector(tra[grep("Distant", rownames(tra)),
+                                                       grep("Nat", colnames(tra))]))
 
 newdata$GRADE.PS <- newdata$GRADE * (newdata$strata %in%
                                          as.vector(tra[grep("Post", rownames(tra)),
@@ -53,19 +63,31 @@ newdata$LN.R <- newdata$LN * (newdata$strata %in%
 
 
 
-
 class(newdata) <- c("msdata", "data.frame")
 attr(newdata, "trans") <- tra
 fitted <- msfit(m, newdata=newdata, trans=tra)
 library(brcarepred)
-tt <- seq(from=0, to=20, by=0.25)
+tt <- seq(from=6, to=20, by=0.25)
 pt <- list()
-system.time(pt[['DR']] <- getProbsDR(m, group=as.numeric(Clinical$Group[i]), newdata, timepoints=tt))
-system.time(pt[['LR']] <- getProbsLR(m, group=as.numeric(Clinical$Group[i]), newdata, timepoints=tt, compact=FALSE))
-tt <- c(2, 5, 10, 15, 20)
+newdata.DR <- newdata
+newdata.DR$AGE.DR[which(newdata.DR$strata %in% seq(from=9,by=9, length=5))] <-
+    newdata.DR$AGE.DR[which(newdata.DR$strata %in% seq(from=9,by=9, length=5))] +
+        newdata.DR$TLastSurgery[which(newdata.DR$strata %in%
+                                       seq(from=8, by=9, length=5))]
+system.time(pt[['DR']] <- getProbsDR(m, group=as.numeric(Clinical$Group[i]), newdata.DR, timepoints=tt))
+
+newdata.LR <- newdata
+newdata.LR$AGE.LR[which(newdata.LR$strata %in% seq(from=7, by=9, length=5))] <-
+newdata.LR$AGE.LR[which(newdata.LR$strata %in% seq(from=7, by=9, length=5))] +
+    newdata.LR$TLastSurgery[which(newdata.LR$strata %in%
+                                   seq(from=6, by=9, length=5))]
+newdata.LR$AGE.DR[which(newdata.LR$strata %in% seq(from=9,by=9, length=5))] <-
+newdata.LR$AGE.LR[which(newdata.LR$strata %in% seq(from=7, by=9, length=5))]
+
+system.time(pt[['LR']] <- getProbsLR(m, group=as.numeric(Clinical$Group[i]), newdata.LR, timepoints=tt, compact=FALSE))
+tt <- c(seq(from=6, to=15, by=0.5), 16:20)
 system.time(pt[['S']] <- getProbsS(m, group=as.numeric(Clinical$Group[i]), newdata, timepoints=tt, compact=FALSE))
 
-save(pt, file=paste0("./IndivProbs/Pam50TP_Patient", i, ".RData"))
+save(pt, file=paste0("./IndivProbs/FROM5/Pam50TP_Patient", i, ".RData"))
 
-}
 

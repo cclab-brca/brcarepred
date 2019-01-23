@@ -1,5 +1,33 @@
 rm(list=ls())
 setwd("./Bootstraps")
+B <- 100
+
+allB <- NULL
+for (i in 1:B) {
+load(paste0("BootsPredsERMODEL_", i, "_NEG.RData"))
+allB <- cbind(allB, coef(mb))
+}
+save(allB, file="../MODELSBOOTER.RData")
+allB <- NULL
+for (i in 1:B) {
+load(paste0("BootsPreds4GROUPSMODEL_", i, "_GROUP1.RData"))
+allB <- cbind(allB, coef(mb))
+}
+save(allB, file="../MODELSBOOTFOURGROUPS.RData")
+allB <- NULL
+for (i in 1:B) {
+load(paste0("BootsPredsPAM50MODEL_", i, "_GROUP1.RData"))
+allB <- cbind(allB, coef(mb))
+}
+save(allB, file="../MODELSBOOTPAM50.RData")
+allB <- NULL
+for (i in 1:B) {
+load(paste0("BootsPredsINTCLUSTMODEL_", i, "_GROUP1.RData"))
+allB <- cbind(allB, coef(mb))
+}
+save(allB, file="../MODELSBOOTINTCLUST.RData")
+
+
 allF <- dir(pattern=".RData")
 allF <- allF[grep("ERMODEL", allF)]
 ER.probs <- list()
@@ -29,7 +57,7 @@ for (j in c("NEG", "POS")) {
 
 library(survival)
 coef.models <- list()
-for (i in 1:200) {
+for (i in 1:B) {
 	ff <- paste0("BootsPredsERMODEL_", i, "_NEG.RData")	
 	load(ff)
 	coef.models[[i]] <- coef(mb)
@@ -68,7 +96,7 @@ cat("Bootstrap ", i, "done\n")
 save(coef.models, ER.probs, file="BootstrapModel_ER_Results.RData")
 
 rm(list=ls())
-
+B <- 100
 allF <- dir(pattern=".RData")
 allF <- allF[grep("4GROUPSMODEL", allF)]
 FOURGROUPS.probs <- list()
@@ -97,7 +125,7 @@ for (j in 1:4) {
 }
 library(survival)
 coef.models <- list()
-for (i in 1:200) {
+for (i in 1:B) {
 	ff <- paste0("BootsPreds4GROUPSMODEL_", i, "_GROUP1.RData")	
 	load(ff)
 	coef.models[[i]] <- coef(mb)
@@ -124,6 +152,7 @@ cat("Bootstrap ", i, "done\n")
 save(coef.models, FOURGROUPS.probs, file="BootstrapModel_4GROUPS_Results.RData")
 
 rm(list=ls())
+B <- 100
 allF <- dir(pattern=".RData")
 allF <- allF[grep("PAM50MODEL", allF)]
 PAM50.probs <- list()
@@ -153,7 +182,7 @@ for (j in 1:5) {
 
 library(survival)
 coef.models <- list()
-for (i in 1:200) {
+for (i in c(1:23, 25:97, 99:B)) {
 	ff <- paste0("BootsPredsPAM50MODEL_", i, "_GROUP1.RData")	
 	load(ff)
 	coef.models[[i]] <- coef(mb)
@@ -180,6 +209,7 @@ cat("Bootstrap ", i, "done\n")
 save(coef.models, PAM50.probs, file="BootstrapModel_PAM50_Results.RData")
 
 rm(list=ls())
+B <- 100
 allF <- dir(pattern=".RData")
 allF <- allF[grep("INTCLUSTMODEL", allF)]
 INTCLUST.probs <- list()
@@ -209,7 +239,7 @@ for (j in 1:11) {
 
 library(survival)
 coef.models <- list()
-for (i in 1:200) {
+for (i in 1:B) {
 	ff <- paste0("BootsPredsINTCLUSTMODEL_", i, "_GROUP1.RData")	
 	load(ff)
 	coef.models[[i]] <- coef(mb)
