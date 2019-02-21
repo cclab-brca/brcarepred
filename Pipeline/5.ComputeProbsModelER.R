@@ -23,16 +23,16 @@ LR<- newdata[6,'TLastSurgery.LR.NEG']
 LRAGE <- 0
 DRAGE <-  newdata[9, 'AGE.DR.NEG'] - newdata[7, 'AGE.LR.NEG']
 newdata.LR <- newdata
-newdata.LR$AGE.PS.LR.NEG[which(newdata.LR$strata %in% c(7))] <-
-    newdata.LR$AGE.PS.LR.NEG[which(newdata.LR$strata %in% c(7))] +
+newdata.LR$AGE.LR.NEG[which(newdata.LR$strata %in% c(7))] <-
+    newdata.LR$AGE.LR.NEG[which(newdata.LR$strata %in% c(7))] +
     newdata.LR$TLastSurgery.LR.NEG[which(newdata.LR$strata %in% c(6))]
-newdata.LR$AGE.PS.LR.POS[which(newdata.LR$strata %in% c(16))] <-
-    newdata.LR$AGE.PS.LR.POS[which(newdata.LR$strata %in% c(16))] +
+newdata.LR$AGE.LR.POS[which(newdata.LR$strata %in% c(16))] <-
+    newdata.LR$AGE.PS.POS[which(newdata.LR$strata %in% c(16))] +
     newdata.LR$TLastSurgery.LR.POS[which(newdata.LR$strata %in% c(15))]
 newdata.LR$AGE.DR.NEG[which(newdata.LR$strata %in% c(9))] <-
-newdata.LR$AGE.PS.LR.NEG[which(newdata.LR$strata %in% c(7))]
+newdata.LR$AGE.LR.NEG[which(newdata.LR$strata %in% c(7))]
 newdata.LR$AGE.DR.POS[which(newdata.LR$strata %in% c(18))] <-
-newdata.LR$AGE.PS.LR.POS[which(newdata.LR$strata %in% c(16))]
+newdata.LR$AGE.LR.POS[which(newdata.LR$strata %in% c(16))]
 pt[['LR']] <- getProbsLR(fm, group=1, newdata.LR, timepoints=timepoints,
  beta=beta, LR=LR, DR=DR, betaAGE=betaAGE, LRAGE=LRAGE, DRAGE=DRAGE, compact=FALSE)
 
