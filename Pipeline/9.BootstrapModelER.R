@@ -108,9 +108,9 @@ newdata$AGE.DR.POS <- newdata$AGE.DR * (newdata$strata %in% c(18))
     beta.state[3,8] <- coef(m)['TLastSurgery.DR.NEG']
     beta.state[3,9] <- coef(m)['AGE.DR.NEG']
     beta.state[7,14:15] <- coef(m)['TLastSurgery.LR.POS']
-    beta.state[7,16] <- coef(m)['AGE.LR.NEG']
+    beta.state[7,16] <- coef(m)['AGE.LR.POS']
     beta.state[8,17] <- coef(m)['TLastSurgery.DR.POS']
-    beta.state[8,18] <- coef(m)['AGE.DR.NEG']
+    beta.state[8,18] <- coef(m)['AGE.DR.POS']
     fitted.Haz <- msfit(m, newdata=newdata, trans=tra)
         tmp <- try(oscar.mssample(fitted.Haz$Haz, trans=tra, clock="reset",
                                   output="data",
