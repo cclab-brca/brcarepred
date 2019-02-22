@@ -94,7 +94,7 @@
          newdata.DR$TLastSurgery.DR.POS[which(newdata.DR$strata==17)]
  system.time(pt[['DR']] <- getProbsDR(m, group=as.numeric(Clinical$ER.Status[i]), newdata.DR, timepoints=tt))
  if(Clinical$ER.Status[i]=="ER+") {
- 				   beta <- coef(m)['TLastSurgery.LR.POS']
+ 				   beta <- coef(m)['TLastSurgery.DR.POS']
  				   betaAGE <- coef(m)['AGE.DR.POS']
  				   DR <- newdata[17,'TLastSurgery.DR.POS']
  				   LR<- newdata[15,'TLastSurgery.LR.POS']
@@ -103,7 +103,7 @@
 
  }
  if(Clinical$ER.Status[i]=="ER-") {
- 				   beta <- coef(m)['TLastSurgery.LR.NEG']
+ 				   beta <- coef(m)['TLastSurgery.DR.NEG']
  				   betaAGE <- coef(m)['AGE.DR.NEG']
  				   DR <- newdata[8,'TLastSurgery.DR.NEG']
  				   LR<- newdata[6,'TLastSurgery.LR.NEG']

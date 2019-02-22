@@ -232,7 +232,7 @@ Oldnewdata.DR$AGE.DR[which(Oldnewdata.DR$strata %in% seq(from=9,by=9, length=2))
         Oldnewdata.DR$TLastSurgery[which(Oldnewdata.DR$strata %in%
                                        seq(from=8, by=9, length=2))]
 pt.boot[['DR']] <- getProbsDR(mb, group=1, Oldnewdata.DR, timepoints=timepoints)
-beta <- coef(mb)['TLastSurgery.LR.NEG']
+beta <- coef(mb)['TLastSurgery.DR.NEG']
 betaAGE <- coef(mb)['AGE.DR.NEG']
 DR <- newdata[8,'TLastSurgery.DR.NEG']
 LR<- newdata[6,'TLastSurgery.LR.NEG']

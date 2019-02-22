@@ -18,7 +18,7 @@ newdata.DR$AGE.DR.POS[which(newdata.DR$strata %in% c(18))] <-
     newdata.DR$TLastSurgery.DR.POS[which(newdata.DR$strata %in% c(17))]
 
 pt[['DR']] <- getProbsDR(fm, group=1, newdata.DR, timepoints=timepoints)
-beta <- coef(m)['TLastSurgery.LR.NEG']
+beta <- coef(m)['TLastSurgery.DR.NEG']
 betaAGE <- coef(m)['AGE.DR.NEG']
 DR <- newdata[8,'TLastSurgery.DR.NEG']
 LR<- newdata[6,'TLastSurgery.LR.NEG']
@@ -67,7 +67,7 @@ newdata.DR$AGE.DR.POS[which(newdata.DR$strata %in% c(18))] <-
 
 pt[['DR']] <- getProbsDR(fm, group=2, newdata.DR, timepoints=timepoints)
 
-beta <- coef(m)['TLastSurgery.LR.POS']
+beta <- coef(m)['TLastSurgery.DR.POS']
 betaAGE <- coef(m)['AGE.DR.POS']
 DR <- newdata[17,'TLastSurgery.DR.POS']
 LR<- newdata[15,'TLastSurgery.LR.POS']
