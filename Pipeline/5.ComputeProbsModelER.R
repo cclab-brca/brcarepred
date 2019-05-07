@@ -1,6 +1,6 @@
 rm(list=ls())
 library(mstate)
-library(brcarepredDEV)
+library(brcarepred)
 load("./Models/ERM.RData")
 newdata$AGE.PS.LR.NEG <- NULL
 newdata$AGE.PS.LR.POS <- NULL
